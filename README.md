@@ -1,20 +1,23 @@
-BRACES
+# BRACES
 
------------------------------------------------
-Shark tracking tool using drones.
+> A shark tracking tool using drones
 
-Aim:
+## Aim
+
 - have drones patrol shark infested waters and take pictures that are sent to backend
 - backend performs image analysis and if there is a suspected shark the drone is instructed to track it
 - keep track of battery life of drones and plan when drones must be switched to fully charged ones
 
-Tech:
+## Tech
+
 - use JS to simulate (naive) drones
 - use Akka Http for F/E
 - use Akka Cluster (sharding) to enable multiple drone sites (one backend should be able to support n client sites)
 - use Akka Persistence to persist positions of drones/etc to survive server outages (resilience)
 
 -----------------------------------------------
+
+## Plan and to-do-list
 
 1. Set up HTTP service : ping service to show how easy it is to get started
   -> explain the bits required : understanding of basic Akka Http building blocks
@@ -38,8 +41,7 @@ Tech:
     - track item
     - send status
   -> simulate slow backend and show how this has effect on the clients (back-pressure in effect)
-
-=> would be cool to draw coast line and show drone positions and movement (air traffic control view) per site (Hawaii/Australia/SA)
+  -> would be cool to draw coast line and show drone positions and movement (air traffic control view) per site (Hawaii/Australia/SA)
 
 4. Akka cluster + persistence
   -> use cluster sharding to determine what actors to use when storing the images (each drone site has its own domain)
