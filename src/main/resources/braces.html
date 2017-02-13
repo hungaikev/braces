@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        <script type="text/javascript">
+            var wsArray = [];
+            for (i = 0; i < 1; i++) {
+                wsArray[i] = new WebSocket("ws://localhost:8080/ws");
+            }
+
+            //alert("Done creating WSs: " + wsArray.length);
+        </script>
+    </head>
+    <body>
+        <div id="theHeatmap" style="width: 480px; height: 400px;">
+            <!-- Ploty heatmap placeholder -->
+        </div>
+        <script type="text/javascript">
+            var zData = [[1,2,3], [3,2,1], [10,1,10]];
+            //for (i = 0; i < 10; i++) {
+            //    zData[i] = 1;
+            //}
+
+            var data = [
+              {
+                z: this.zData,
+                type: "heatmap",
+                colorscale: 'YIOrRd'
+              }
+            ];
+
+            console.log(">>>> " + JSON.stringify(data));
+
+            Plotly.plot("theHeatmap", data);
+        </script>
+    </body>
+</html>

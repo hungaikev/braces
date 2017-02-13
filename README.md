@@ -1,6 +1,7 @@
 # BRACES
 
-> A shark tracking tool using drones
+> A shark tracking tool using drones (not including laser equipped sharks in the first version)
+
 
 ## Aim
 
@@ -19,8 +20,14 @@
 
 ## Plan and to-do-list
 
+0. Start off by explaining the domain model for Braces. Walk through an architecture diagram with all pieces we want to create.
+
 1. Set up HTTP service : ping service to show how easy it is to get started
   -> explain the bits required : understanding of basic Akka Http building blocks
+  -> Akka Http has actors and streams available by default
+  -> Explain the actor model, its shortcomings and why streams is the remedy
+  -> Power of actor model: Distributed programming
+  -> Introduce the Reactive Manifesto
 
 2. Create WS connection and stream messages
   -> introduce Akka Streams and some of its basic functionality
@@ -29,6 +36,19 @@
     - Flow
     - Graphs
   -> handleWebsocketMessages
+  -> Spray JSON intro
+  -> show how to debug stages in the flow that throws exceptions
+  -> show a couple of FlowOps methods to simulate various scenarios (without having a connected backend)
+    (point out similarities with Scala collections):
+    - filter
+    - map
+    - mapConcat (flatMap)
+    - mapAsync
+    - takeWhile
+    - dropWhile
+    - throttle
+    - batch
+    - buffer
 
 3. Implement clients (drones)
   -> connect to backend (hello, I am alive and kicking)
@@ -48,7 +68,7 @@
   -> real-time analysis of incoming images
   -> simulate back-up of the analyzing process and discuss alternative solutions, e.g. temp store (Kafka?), process and delete
   -> simulate shark found and send instructions to drone(s)
-  -> advanced: implement switching schemes (keep track of distances from drone to charging station etc.)
+  -> extra: implement switching schemes (keep track of distances from drone to charging station etc.)
 
 5. Testing
   -> unit testing
