@@ -1,0 +1,52 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="HtmlUnknownAttribute" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myValues">
+        <value>
+          <list size="16">
+            <item index="0" class="java.lang.String" itemvalue="rt:grid-container" />
+            <item index="1" class="java.lang.String" itemvalue="rt:grid-pagination" />
+            <item index="2" class="java.lang.String" itemvalue="rt:grid-sortable-column" />
+            <item index="3" class="java.lang.String" itemvalue="ng:repeat" />
+            <item index="4" class="java.lang.String" itemvalue="rt:grid-editable-cell" />
+            <item index="5" class="java.lang.String" itemvalue="ng:required" />
+            <item index="6" class="java.lang.String" itemvalue="ng:click" />
+            <item index="7" class="java.lang.String" itemvalue="ng:disabled" />
+            <item index="8" class="java.lang.String" itemvalue="rt:debug" />
+            <item index="9" class="java.lang.String" itemvalue="rt:form-input-name" />
+            <item index="10" class="java.lang.String" itemvalue="rt:form-save-button" />
+            <item index="11" class="java.lang.String" itemvalue="rt:form-reset-button" />
+            <item index="12" class="java.lang.String" itemvalue="ng:options" />
+            <item index="13" class="java.lang.String" itemvalue="ng:controller" />
+            <item index="14" class="java.lang.String" itemvalue="ng:class" />
+            <item index="15" class="java.lang.String" itemvalue="ng:show" />
+          </list>
+        </value>
+      </option>
+      <option name="myCustomValuesEnabled" value="true" />
+    </inspection_tool>
+    <inspection_tool class="SSBasedInspection" enabled="true" level="ERROR" enabled_by_default="true">
+      <scope name="Project Files" level="ERROR" enabled="true">
+        <replaceConfiguration name="@Log cannot be injected in non-spring bean" text="@$Annotation$( )&#10;public class $Class$ {&#10;   @Log&#10;   Logger log;&#10;}" recursive="false" caseInsensitive="false" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="@$Annotation$( )&#10;@Component&#10;public class $Class$ {&#10;   @Log&#10;   Logger log;&#10;}">
+          <constraint name="Annotation" script="&quot;&quot;" regexp="(Service|Component|Controller|Converter|Bean|RunWith)" minCount="0" maxCount="0" within="" contains="" />
+          <constraint name="Class" within="" contains="" />
+        </replaceConfiguration>
+      </scope>
+      <replaceConfiguration name="@Log cannot be injected in non-spring bean" text="@$Annotation$( )&#10;public class $Class$ {&#10;   @Log&#10;   Logger log;&#10;}" recursive="false" caseInsensitive="false" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="@$Annotation$( )&#10;@Component&#10;public class $Class$ {&#10;   @Log&#10;   Logger log;&#10;}">
+        <constraint name="Annotation" script="&quot;&quot;" regexp="(Service|Component|Controller|Converter|Bean|RunWith)" minCount="0" maxCount="0" within="" contains="" />
+        <constraint name="Class" within="" contains="" />
+      </replaceConfiguration>
+    </inspection_tool>
+    <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
+    </inspection_tool>
+    <inspection_tool class="TypeAnnotation" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="UnnecessaryLocalVariable" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="m_ignoreImmediatelyReturnedVariables" value="false" />
+      <option name="m_ignoreAnnotatedVariables" value="false" />
+    </inspection_tool>
+  </profile>
+</component>
