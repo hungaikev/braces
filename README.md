@@ -20,16 +20,30 @@
 
 ## Plan and to-do-list
 
-0. Start off by explaining the domain model for Braces. Walk through an architecture diagram with all pieces we want to create.
+-1. Introduction
+    - presenters
+    - overview of today's training
 
-1. Set up HTTP service : ping service to show how easy it is to get started
+0. Overview of Reactive Applications (HE)
+    - reactive manifesto
+    = actor model
+        - message passing
+        - supervision
+        - distribution
+
+1. Start off by explaining the domain model for Braces. Walk through an architecture diagram with all pieces we want to create (HE)
+
+2. Monitoring of system (HE)
+  -> use sandbox and show off dashboards
+
+3. Set up HTTP service : ping service to show how easy it is to get started (KM)
   -> explain the bits required : understanding of basic Akka Http building blocks
   -> Akka Http has actors and streams available by default
   -> Explain the actor model, its shortcomings and why streams is the remedy
   -> Power of actor model: Distributed programming
   -> Introduce the Reactive Manifesto
 
-2. Create WS connection and stream messages
+4. Create WS connection and stream messages (KM)
   -> introduce Akka Streams and some of its basic functionality
     - Source
     - Sink
@@ -50,7 +64,7 @@
     - batch
     - buffer
 
-3. Implement clients (drones)
+5. Implement clients (drones) (HE)
   -> connect to backend (hello, I am alive and kicking)
   -> send image (store locally if under back-pressure)
   -> send status (battery power, position, velocity, etc.)
@@ -63,20 +77,14 @@
   -> simulate slow backend and show how this has effect on the clients (back-pressure in effect)
   -> would be cool to draw coast line and show drone positions and movement (air traffic control view) per site (Hawaii/Australia/SA)
 
-4. Akka cluster + persistence
+6. Akka cluster + persistence (HE)
   -> use cluster sharding to determine what actors to use when storing the images (each drone site has its own domain)
   -> real-time analysis of incoming images
   -> simulate back-up of the analyzing process and discuss alternative solutions, e.g. temp store (Kafka?), process and delete
   -> simulate shark found and send instructions to drone(s)
   -> extra: implement switching schemes (keep track of distances from drone to charging station etc.)
 
-5. Testing
+7. Testing (KM)
   -> unit testing
   -> integration testing (multi-jvm)
   -> pull the plugs/chaos monkeys in da house!
-
-6. Monitoring of system
-  -> use sandbox and show off dashboards
-
-7. Deployment of system
-  -> use Prod Suite
