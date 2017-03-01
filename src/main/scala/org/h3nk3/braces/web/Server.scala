@@ -13,6 +13,8 @@ import akka.NotUsed
 import scala.io.StdIn
 import akka.stream.scaladsl.{Flow, Sink, Source}
 
+import scala.util.Random
+
 
 object Server {
   def main(args: Array[String]) = {
@@ -29,16 +31,23 @@ object Server {
       Flow[Message].collect {
         case TextMessage.Strict(tMsg) =>
           try {
-            val ic = tMsg.toJson.convertTo[InitializeClient]
-            println(s"TEXT MESSAGE: $ic")
-            ic
+            // TODO : parse incoming messages
+            //val ic = tMsg.toJson.convertTo[InitializeClient]
+            println(s"TEXT MESSAGE: $tMsg")
+            InitializeClient(tMsg)
           } catch {
             case e: Exception =>
               InitializeClient(s"ID-${System.currentTimeMillis}")
           }
       }
 
-    val wsFlow: Flow[Message, Message, Any] = Flow.fromSinkAndSource(sink = parseJsonFlow.to(Sink.ignore), source = Source.maybe)
+    val wsFlow: Flow[Message, Message, Any] = //Flow.fromSinkAndSource(sink = parseJsonFlow.to(Sink.foreach(println)), source = Source.maybe)
+      Flow[Message].mapConcat {
+        case tm: TextMessage =>
+          Thread.sleep(Random.nextInt(100))
+          TextMessage(Source.single(tm.getStrictText)) :: Nil
+        case _ => Nil
+      }
 
     val route =
       path("ws") {
