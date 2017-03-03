@@ -9,10 +9,31 @@ import akka.actor.{Actor, ActorLogging, Props}
 
 object DroneManager {
   def props: Props = Props[DroneManager]
+  case class Instructions(area: SurveillanceArea, numberOfDrones: Int)
+  case class SurveillanceArea(lat: Double, long: Double)
+  case object StartDrones
+  case object StopDrones
 }
 
 class DroneManager extends Actor with ActorLogging {
-  def receive: Receive = {
-    case _ =>
+  import DroneManager._
+  var instructions: Option[Instructions] = None
+
+  def readyState: Receive = {
+    case inst: Instructions => instructions = Some(inst)
+    case StartDrones =>
+      instructions map { i =>
+        // TODO : Bootstrap drones, send instructions to drones
+        log.info("Drones started. Switching to Running State.")
+        readyState
+      }
   }
+
+  def runningState: Receive = {
+    case StopDrones =>
+      log.info("Drones stopped. Switching to Ready State.")
+      readyState
+  }
+
+  def receive: Receive = readyState
 }
