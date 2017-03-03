@@ -16,32 +16,13 @@ import akka.stream.scaladsl.{Flow, Sink, Source}
 import scala.util.Random
 
 
-object Server {
+object Gateway {
   def main(args: Array[String]) = {
     implicit val system = ActorSystem("braces-frontend")
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    // json marshalling stuff
-    //implicit val droneFormat = jsonFormat2(Drone)
-    //implicit val baseFormat = jsonFormat2(Base)
-    implicit val initializeClientFormat = jsonFormat1(InitializeClient)
-
-    val parseJsonFlow: Flow[Message, BracesEvent, NotUsed] =
-      Flow[Message].collect {
-        case TextMessage.Strict(tMsg) =>
-          try {
-            // TODO : parse incoming messages
-            //val ic = tMsg.toJson.convertTo[InitializeClient]
-            println(s"TEXT MESSAGE: $tMsg")
-            InitializeClient(tMsg)
-          } catch {
-            case e: Exception =>
-              InitializeClient(s"ID-${System.currentTimeMillis}")
-          }
-      }
-
-    val wsFlow: Flow[Message, Message, Any] = //Flow.fromSinkAndSource(sink = parseJsonFlow.to(Sink.foreach(println)), source = Source.maybe)
+    val wsFlow: Flow[Message, Message, Any] =
       Flow[Message].mapConcat {
         case tm: TextMessage =>
           Thread.sleep(Random.nextInt(100))
@@ -51,13 +32,12 @@ object Server {
 
     val route =
       path("ws") {
-        println(">>> Incoming WS connection accepted")
         handleWebSocketMessages(wsFlow)
       }
 
     val httpBindingFuture = Http().bindAndHandle(route, "localhost", 8080)
 
-    println(s"Server online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Gateway online at http://localhost:8080/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     httpBindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

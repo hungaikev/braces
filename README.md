@@ -26,10 +26,11 @@
 
 0. Overview of Reactive Applications (HE)
     - reactive manifesto
-    = actor model
+    - actor model
         - message passing
         - supervision
         - distribution
+    - Power of actor model: Distributed programming
 
 1. Start off by explaining the domain model for Braces. Walk through an architecture diagram with all pieces we want to create (HE)
 
@@ -39,9 +40,7 @@
 3. Set up HTTP service : ping service to show how easy it is to get started (KM)
   -> explain the bits required : understanding of basic Akka Http building blocks
   -> Akka Http has actors and streams available by default
-  -> Explain the actor model, its shortcomings and why streams is the remedy
-  -> Power of actor model: Distributed programming
-  -> Introduce the Reactive Manifesto
+  -> Explain what actors short comings are and why streams is the remedy
 
 4. Create WS connection and stream messages (KM)
   -> introduce Akka Streams and some of its basic functionality
