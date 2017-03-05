@@ -2,12 +2,12 @@ package org.h3nk3.braces.backend
 
 import akka.actor.{Actor, ActorLogging}
 
-object ImageAnalyzer {
+object ImageAnalyzerActor {
   case class SharkIdentified(image: Image, sharkPosition: (Int, Int))
 }
 
-class ImageAnalyzer extends Actor with ActorLogging {
-  import ImageAnalyzer._
+class ImageAnalyzerActor extends Actor with ActorLogging {
+  import ImageAnalyzerActor._
 
   val sleepSimulation = context.system.settings.config.getLong("braces.image-processing-simulation-sleep")
 

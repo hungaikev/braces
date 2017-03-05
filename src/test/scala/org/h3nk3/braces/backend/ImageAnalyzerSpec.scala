@@ -6,7 +6,7 @@ import akka.actor.ActorSystem
 import org.scalatest.{Matchers, WordSpecLike}
 import akka.testkit.{TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.ImageAnalyzer.SharkIdentified
+import org.h3nk3.braces.backend.ImageAnalyzerActor.SharkIdentified
 
 object ImageAnalyzerSpec {
   val config =
@@ -26,13 +26,13 @@ class ImageAnalyzerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFac
 
     "not react on non shark images" in {
       val image = Image(droneId, 1L, date, position, pieceResolution, Array(Array(1,2,3), Array(4,5,6), Array(7,8,9)))
-      val imageAnalyzer = TestActorRef[ImageAnalyzer].underlyingActor
+      val imageAnalyzer = TestActorRef[ImageAnalyzerActor].underlyingActor
       imageAnalyzer.analyzeImage(image) should equal(Set.empty[SharkIdentified])
     }
 
     "identify multiple sharks" in {
       val image = Image(droneId, 1L, date, position, pieceResolution, Array(Array(13,2,3), Array(4,5,6), Array(7,8,13)))
-      val imageAnalyzer = TestActorRef[ImageAnalyzer].underlyingActor
+      val imageAnalyzer = TestActorRef[ImageAnalyzerActor].underlyingActor
       imageAnalyzer.analyzeImage(image) should contain only(SharkIdentified(image, (0,0)), SharkIdentified(image, (2,2)))
     }
   }
