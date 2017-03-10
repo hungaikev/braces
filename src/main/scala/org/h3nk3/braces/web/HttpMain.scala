@@ -24,6 +24,11 @@ object HttpMain extends HttpApp with App
   startServer("127.0.0.1", 8000)
 
   override def route =
+    // step 0 --- just a hello world 
+    get {
+      complete("Hello world!")
+    } ~
+    // step 1 --- websocket
     pathSingleSlash {
       getFromResource("braces.html")
     } ~
