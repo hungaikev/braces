@@ -13,8 +13,12 @@ case object Operating extends DroneStatus
 case object Maintenance extends DroneStatus
 case object Stopped extends DroneStatus
 
-case class DroneInfo(position: Position, velocity: Double, direction: Int, batteryPower: Int)
-case class Position(lat: Double, long: Double)
+/** server can signal commands to drone? */
+final case class DroneCommand()
+final case class DroneInfo(id: String, position: Position, velocity: Double, direction: Int, batteryPower: Int)
+final case class Position(lat: Double, long: Double)
+
+def 
 
 object DroneActor {
   def props(droneId: String, surveillanceArea: SurveillanceArea): Props = Props(new DroneActor(droneId, surveillanceArea))
@@ -25,3 +29,6 @@ class DroneActor(droneId: String, surveillanceArea: SurveillanceArea) extends Pe
   override def receiveCommand: Receive = ???
   override def persistenceId: String = ???
 }
+
+
+final case class ServerCommand() // TODO do we need those?
