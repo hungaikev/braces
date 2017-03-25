@@ -6,10 +6,11 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
+import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.domain.Domain.Position
+import org.h3nk3.braces.domain.Domain._
 import org.h3nk3.braces.domain.OurDomainJsonSupport
 
 import scala.concurrent.duration._
@@ -38,11 +39,12 @@ object DroneApp extends App with OurDomainJsonSupport {
     )
 
 
-  def getCurrentPosition: Position =
-    Position(13, 37) // TODO make it move
+  def getCurrentPosition: DronePosition =
+    DronePosition(13, 37) // TODO make it move
   
-  val renderAsJson: Flow[Position, String, NotUsed] =
-    Flow[Position]
-      .mapAsync(parallelism = 1)(p => Marshal(p).to[String])
+  val renderAsJson: Flow[DronePosition, String, NotUsed] =
+    Flow[DronePosition]
+      .mapAsync(parallelism = 1)(p => Marshal(p).to[HttpEntity].flatMap(_.toStrict(1.seconds)))
+      .map(_.data.utf8String)
   
 }

@@ -87,3 +87,10 @@
   -> unit testing
   -> integration testing (multi-jvm)
   -> pull the plugs/chaos monkeys in da house!
+  
+8. Show off what's coming soon
+  -> transparent HTTP/2
+    -> server push
+  -> Akka HTTP backing Play Framework
+  -> Akka Typed (!)
+  -> Akka Distributed Data is stable

@@ -4,14 +4,14 @@ import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
-import akka.http.scaladsl.server.{Directives, HttpApp, Route}
+import akka.http.scaladsl.server.Directives
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.backend.{DroneInfo, ServerCommand}
+import org.h3nk3.braces.domain.Domain.{DroneInfo, ServerCommand}
 
 object HttpMain extends App 
   with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestion { 
+  with DroneInfoIngestionService { 
 
   implicit val system = ActorSystem("HttpApp")
   implicit val materializer = ActorMaterializer()

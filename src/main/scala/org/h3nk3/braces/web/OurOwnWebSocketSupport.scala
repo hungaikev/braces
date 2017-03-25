@@ -5,7 +5,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.model.ws.TextMessage.{Streamed, Strict}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink}
-import org.h3nk3.braces.backend.DroneInfo
+import org.h3nk3.braces.domain.Domain.DroneInfo
 
 import scala.concurrent.Future
 import scala.util.Random
@@ -14,7 +14,7 @@ trait OurOwnWebSocketSupport {
 
   implicit def materializer: Materializer
   
-  def ingestionHub: Sink[DroneInfo, NotUsed]
+  def ingestionHub: Sink[DroneInfo, Any]
   
   val websocketEcho: Flow[Message, Message, Any] =
     Flow[Message]
