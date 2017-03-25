@@ -17,22 +17,15 @@ object Main {
   }
 
   def bootstrap(system: ActorSystem): Unit = {
-    system.actorOf(
+    val x = system.actorOf(
       ClusterSingletonManager.props(
         singletonProps = DroneManager.props,
         terminationMessage = PoisonPill,
         settings = ClusterSingletonManagerSettings(system)),
-       name = "droneManager"
-      )
+      "droneManager")
 
     // Look up the cluster singleton and send start message to it
-
-    val droneManagerProxy = system.actorOf(
-      ClusterSingletonProxy.props(
-        settings = ClusterSingletonProxySettings(system),
-        singletonManagerPath = "/user/droneManager"
-      ),
-      name = "droneManagerProxy")
+    val droneManagerProxy = system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(system)), "droneManagerProxy")
 
     val saConf = system.settings.config.getConfig("braces.surveillance-area")
 

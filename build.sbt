@@ -1,5 +1,7 @@
 import sbt.Keys.libraryDependencies
 
+val project = Project(id = "braces", base = file("."))enablePlugins (Cinnamon)
+
 name := """braces"""
 
 version := "1.0"
@@ -27,5 +29,11 @@ libraryDependencies ++= Seq(
   "io.circe"          %% "circe-generic"        % "0.7.0",
   
   "org.scalatest"     %% "scalatest"    % scalaTestVersion % "test",
-  "com.typesafe.akka" %% "akka-testkit" % akkaVersion      % "test"
+  "com.typesafe.akka" %% "akka-testkit" % akkaVersion      % "test",
+
+  // Adds monitoring capabilities to the project
+  Cinnamon.library.cinnamonSandbox
 )
+
+cinnamon in run := true
+cinnamon in test := true
