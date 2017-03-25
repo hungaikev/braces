@@ -4,12 +4,12 @@ import akka.actor.Props
 import akka.persistence.PersistentActor
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 
-object Drone {
+object PersistentDrone {
   def props(droneId: String, surveillanceArea: SurveillanceArea): Props = 
-    Props(new Drone(droneId, surveillanceArea))
+    Props(new PersistentDrone(droneId, surveillanceArea))
 }
 
-class Drone(droneId: String, surveillanceArea: SurveillanceArea) extends PersistentActor {
+class PersistentDrone(droneId: String, surveillanceArea: SurveillanceArea) extends PersistentActor {
   override def receiveRecover: Receive = ???
   override def receiveCommand: Receive = ???
   override def persistenceId: String = ???

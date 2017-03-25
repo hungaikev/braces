@@ -10,12 +10,12 @@ import scala.concurrent.Future
 
 trait OurDomainJsonSupport extends SprayJsonSupport with DefaultJsonProtocol 
 with FramedEntityStreamingDirectives {
-  
-  // TODO technically should not be needed to go as low level... easier for me to impl actually heh
-  implicit def directlyToString[P](implicit m: RootJsonWriter[P]): Marshaller[P, String] =
-    Marshaller { _ => c => 
-      Future.successful {
-        Marshalling.WithFixedContentType(ContentTypes.`text/plain(UTF-8)`, () => m.write(c).toString()) :: Nil
-      }
-    }
+//  
+//  // TODO technically should not be needed to go as low level... easier for me to impl actually heh
+//  implicit def directlyToString[P](implicit m: RootJsonWriter[P]): Marshaller[P, String] =
+//    Marshaller { _ => c => 
+//      Future.successful {
+//        Marshalling.WithFixedContentType(ContentTypes.`text/plain(UTF-8)`, () => m.write(c).toString()) :: Nil
+//      }
+//    }
 }

@@ -7,7 +7,7 @@ version := "1.0"
 scalaVersion := "2.11.8"
 
 lazy val akkaVersion = "2.4.17"
-lazy val akkaHttpVersion = "10.0.4"
+lazy val akkaHttpVersion = "10.0.5"
 lazy val scalaTestVersion = "3.0.0"
 
 libraryDependencies ++= Seq(
@@ -23,6 +23,8 @@ libraryDependencies ++= Seq(
   
   "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "de.heikoseeberger" %% "akka-http-circe"      % "1.14.0",
+  "io.circe"          %% "circe-generic"        % "0.7.0",
   
   "org.scalatest"     %% "scalatest"    % scalaTestVersion % "test",
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion      % "test"

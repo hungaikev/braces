@@ -6,7 +6,9 @@ import akka.actor.ActorSystem
 import org.scalatest.{Matchers, WordSpecLike}
 import akka.testkit.{TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
+import org.h3nk3.braces.AkkaSpec
 import org.h3nk3.braces.backend.ImageAnalyzerActor.SharkIdentified
+import org.h3nk3.braces.domain.Domain
 
 object ImageAnalyzerSpec {
   val config =
@@ -17,11 +19,11 @@ object ImageAnalyzerSpec {
     """.stripMargin
 }
 
-class ImageAnalyzerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFactory.parseString(ImageAnalyzerSpec.config))) with WordSpecLike with Matchers {
+class ImageAnalyzerSpec extends AkkaSpec(ImageAnalyzerSpec.config) {
   "ImageAnalyzer" should {
     val droneId = "id123"
     val date = new Date()
-    val position = Position(10.0, 10.0)
+    val position = Domain.DronePosition(10.0, 10.0)
     val pieceResolution = 1
 
     "not react on non shark images" in {
