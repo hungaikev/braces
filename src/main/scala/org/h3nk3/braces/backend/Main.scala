@@ -1,7 +1,9 @@
 package org.h3nk3.braces.backend
 
 import akka.actor.{ActorSystem, PoisonPill}
-import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings}
+import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
+import org.h3nk3.braces.backend.DroneManager.{StartDrones, SurveillanceArea}
+import org.h3nk3.braces.domain.Domain.DronePosition
 
 import scala.io.StdIn
 
@@ -22,6 +24,27 @@ object Main {
         settings = ClusterSingletonManagerSettings(system)),
        name = "droneManager"
       )
+
+    // Look up the cluster singleton and send start message to it
+
+    val droneManagerProxy = system.actorOf(
+      ClusterSingletonProxy.props(
+        settings = ClusterSingletonProxySettings(system),
+        singletonManagerPath = "/user/droneManager"
+      ),
+      name = "droneManagerProxy")
+
+    val saConf = system.settings.config.getConfig("braces.surveillance-area")
+
+    // This simulates some start up process of the system in that we "create" drones.
+    // In reality drones should register themselves when they start up.
+    // Since this is a simplified app we do not care about minor logical mishaps.
+    droneManagerProxy ! StartDrones(
+          SurveillanceArea(
+            DronePosition(saConf.getDouble("upper-left-lat"), saConf.getDouble("upper-left-long")),
+            DronePosition(saConf.getDouble("lower-right-lat"), saConf.getDouble("lower-right-long"))),
+          system.settings.config.getInt("braces.number-of-drones")
+        )
   }
 }
 

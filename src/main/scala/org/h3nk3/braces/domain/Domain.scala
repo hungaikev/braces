@@ -1,11 +1,9 @@
 package org.h3nk3.braces.domain
 
-import akka.actor.Props
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.persistence.PersistentActor
+import java.util.Date
+
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.generic.AutoDerivation
-import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 
 /**
  * Always use as: `import org.h3nk3.braces.domain.Domain._`
@@ -37,6 +35,8 @@ trait Domain extends FailFastCirceSupport with AutoDerivation {
   final case class DronePosition(lat: Double, long: Double)
 
   final case class ServerCommand() // TODO do we need those?
+
+  final case class Image(droneId: String, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
 
 }
 

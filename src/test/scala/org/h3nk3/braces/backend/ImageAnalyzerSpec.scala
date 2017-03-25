@@ -2,13 +2,10 @@ package org.h3nk3.braces.backend
 
 import java.util.Date
 
-import akka.actor.ActorSystem
-import org.scalatest.{Matchers, WordSpecLike}
-import akka.testkit.{TestActorRef, TestKit}
-import com.typesafe.config.ConfigFactory
+import akka.testkit.TestActorRef
 import org.h3nk3.braces.AkkaSpec
 import org.h3nk3.braces.backend.ImageAnalyzerActor.SharkIdentified
-import org.h3nk3.braces.domain.Domain
+import org.h3nk3.braces.domain.Domain.DronePosition
 
 object ImageAnalyzerSpec {
   val config =
@@ -23,7 +20,7 @@ class ImageAnalyzerSpec extends AkkaSpec(ImageAnalyzerSpec.config) {
   "ImageAnalyzer" should {
     val droneId = "id123"
     val date = new Date()
-    val position = Domain.DronePosition(10.0, 10.0)
+    val position = DronePosition(10.0, 10.0)
     val pieceResolution = 1
 
     "not react on non shark images" in {
