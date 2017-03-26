@@ -34,7 +34,7 @@ class DroneManager extends Actor with ActorLogging {
       }
 
       log.info("Drones started. Switching to Running State.")
-      readyState
+      runningState
   }
 
   def runningState: Receive = {
