@@ -26,7 +26,7 @@ object HttpMain extends App
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
   def decodeDroneInfo: Flow[Message, DroneInfo, NotUsed] =
-    Flow[Message].via(this.toStrictText).map(_ => DroneInfo("ID", null, 2, 1, 1)) // FIXME decoding
+    Flow[Message].via(this.toStrictText).map(_ => DroneInfo(null, 2, 1, 1)) // FIXME decoding
 
   def encodeServerCommand: Flow[ServerCommand, Message, NotUsed] =  
     Flow.fromFunction(_ => TextMessage("")) // TODO render commands

@@ -18,9 +18,9 @@ trait Domain extends FailFastCirceSupport with AutoDerivation {
 
   case class InitializeClient(clientId: String) extends BracesEvent
 
-  case class DroneData(id: String, status: DroneStatus, info: DroneInfo) // better names?
+  case class DroneData(id: Int, status: DroneStatus, info: DroneInfo) // better names?
 
-  trait DroneStatus
+  trait DroneStatus extends Serializable
   case object Charging    extends DroneStatus
   case object Ready       extends DroneStatus
   case object Operating   extends DroneStatus
@@ -30,13 +30,13 @@ trait Domain extends FailFastCirceSupport with AutoDerivation {
   /** server can signal commands to drone? */
   final case class DroneCommand()
 
-  final case class DroneInfo(id: String, position: DronePosition, velocity: Double, direction: Int, batteryPower: Int)
+  final case class DroneInfo(position: DronePosition, velocity: Double, direction: Int, batteryPower: Int)
 
   final case class DronePosition(lat: Double, long: Double)
 
   final case class ServerCommand() // TODO do we need those?
 
-  final case class Image(droneId: String, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
+  final case class Image(droneId: Int, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
 
 }
 

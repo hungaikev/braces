@@ -9,7 +9,7 @@ with DroneInfoIngestionService {
   
   "DroneInfoIngestionService" should {
     "fail if consuming side has not started" in {
-      val incoming = Source.single(DroneInfo("hello", DronePosition(1,1), 1, 0, 35))
+      val incoming = Source.single(DroneInfo(DronePosition(1,1), 1, 0, 35))
       ingestionHub.runWith(incoming)
     }
   }

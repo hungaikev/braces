@@ -7,9 +7,8 @@ import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStor
 import akka.util.Timeout
 import akka.pattern.ask
 import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.DroneActor.DroneInfo
 import org.h3nk3.braces.backend.DroneManager.{StartDrones, SurveillanceArea}
-import org.h3nk3.braces.domain.Domain.DronePosition
+import org.h3nk3.braces.domain.Domain._
 
 import scala.concurrent.duration._
 import scala.io.StdIn
@@ -24,10 +23,12 @@ object Main {
       systems = Seq(startBackend(port))
     }
 
+    Thread.sleep(5000)
+    ClusterSharding(systems.head).shardRegion("Drone") ! DroneData(1, Ready, DroneInfo(DronePosition(0.0, 0.0), 0.0, 0, 100))
+
     println(s"Backend server running\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     systems foreach { _.terminate() }
-
   }
 
   def startBackend(port: Int): ActorSystem = {

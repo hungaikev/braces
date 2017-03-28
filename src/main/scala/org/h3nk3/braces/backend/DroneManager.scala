@@ -7,8 +7,7 @@ package org.h3nk3.braces.backend
 
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
-import org.h3nk3.braces.backend.DroneActor.DroneInfo
-import org.h3nk3.braces.domain.Domain.DronePosition
+import org.h3nk3.braces.domain.Domain._
 
 object DroneManager {
   def props: Props = Props[DroneManager]
@@ -50,11 +49,11 @@ class DroneManager extends Actor with ActorLogging {
   val numberOfShards = 100
 
   def extractShardId: ShardRegion.ExtractShardId = {
-    case DroneInfo(id, _, _, _, _) => (id % numberOfShards).toString
+    case DroneData(id, _, _) => (id % numberOfShards).toString
   }
 
   def extractEntityId: ShardRegion.ExtractEntityId = {
-    case msg @ DroneInfo(id, _, _, _, _) => (id.toString, msg)
+    case msg @ DroneData(id, _, _) => (id.toString, msg)
   }
 
   /*
