@@ -37,7 +37,6 @@ trait Domain extends FailFastCirceSupport with AutoDerivation {
   final case class ServerCommand() // TODO do we need those?
 
   final case class Image(droneId: Int, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
-
 }
 
 object Domain extends Domain

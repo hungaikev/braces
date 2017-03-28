@@ -2,6 +2,8 @@ package org.h3nk3.braces.backend
 
 import akka.actor.{Actor, ActorLogging}
 
+import org.h3nk3.braces.domain.Domain._
+
 object ImageAnalyzerActor {
   case class SharkIdentified(image: Image, sharkPosition: (Int, Int))
 }
