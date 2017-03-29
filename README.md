@@ -77,11 +77,11 @@
   -> would be cool to draw coast line and show drone positions and movement (air traffic control view) per site (Hawaii/Australia/SA)
 
 6. Akka cluster + persistence (HE)
+  -> clustering and persistence overview
   -> use cluster sharding to determine what actors to use when storing the images (each drone site has its own domain)
   -> real-time analysis of incoming images
   -> simulate back-up of the analyzing process and discuss alternative solutions, e.g. temp store (Kafka?), process and delete
   -> simulate shark found and send instructions to drone(s)
-  -> extra: implement switching schemes (keep track of distances from drone to charging station etc.)
 
 7. Testing (KM)
   -> unit testing
