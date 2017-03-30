@@ -49,11 +49,11 @@ class DroneManager extends Actor with ActorLogging {
   val numberOfShards = 100
 
   def extractShardId: ShardRegion.ExtractShardId = {
-    case DroneData(id, _, _) => (id % numberOfShards).toString
+    case DroneData(id, _, _, _, _, _) => (id % numberOfShards).toString
   }
 
   def extractEntityId: ShardRegion.ExtractEntityId = {
-    case msg @ DroneData(id, _, _) => (id.toString, msg)
+    case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
   }
 
   /*

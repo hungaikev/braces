@@ -5,7 +5,7 @@ import java.util.Date
 import akka.testkit.TestActorRef
 import org.h3nk3.braces.AkkaSpec
 import org.h3nk3.braces.backend.ImageAnalyzerActor.SharkIdentified
-import org.h3nk3.braces.domain.Domain.DronePosition
+import org.h3nk3.braces.domain.Domain._
 
 object ImageAnalyzerSpec {
   val config =
@@ -18,7 +18,7 @@ object ImageAnalyzerSpec {
 
 class ImageAnalyzerSpec extends AkkaSpec(ImageAnalyzerSpec.config) {
   "ImageAnalyzer" should {
-    val droneId = "id123"
+    val droneId = 123
     val date = new Date()
     val position = DronePosition(10.0, 10.0)
     val pieceResolution = 1

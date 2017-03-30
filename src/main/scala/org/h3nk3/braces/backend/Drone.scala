@@ -25,7 +25,7 @@ class DroneActor(droneId: Int, surveillanceArea: SurveillanceArea) extends Persi
   override def persistenceId: String = "Drone-" + self.path.name
 
   var droneInfo: DroneInfo = null
-  
+
   override def receiveCommand: Receive = {
     case DroneData(id, status, position, velocity, direction, batteryPower) =>
       val distance = calcDistance(position)

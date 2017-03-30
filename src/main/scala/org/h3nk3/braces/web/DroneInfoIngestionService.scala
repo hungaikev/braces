@@ -11,13 +11,13 @@ trait DroneInfoIngestionService {
 
   implicit def materializer: Materializer
 
-  val ingestionHub: Sink[DroneInfo, NotUsed] =
+  val ingestionHub: Sink[DroneData, NotUsed] =
     DroneInfoIngestionService.hubIngestion.get() match {
       case null => throw new Exception("Not initialized consuming side of hub yet!")
       case sink => sink
     }
 
-  def initIngestionHub[M](sink: Sink[DroneInfo, M]): M =
+  def initIngestionHub[M](sink: Sink[DroneData, M]): M =
     DroneInfoIngestionService.hubIngestion.get() match {
       case null =>
         val (mergeSink, mat) = 
@@ -36,6 +36,6 @@ trait DroneInfoIngestionService {
 }
 
 object DroneInfoIngestionService {
-  private[braces] val hubIngestion = new AtomicReference[Sink[DroneInfo, NotUsed]]()
-  private[braces] val hubSource = new AtomicReference[Source[DroneInfo, NotUsed]]()
+  private[braces] val hubIngestion = new AtomicReference[Sink[DroneData, NotUsed]]()
+  private[braces] val hubSource = new AtomicReference[Source[DroneData, NotUsed]]()
 }

@@ -7,7 +7,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.server.Directives
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.domain.Domain.{DroneInfo, ServerCommand}
+import org.h3nk3.braces.domain.Domain.{DroneData, Ready, ServerCommand}
 
 object HttpMain extends App 
   with Directives with OurOwnWebSocketSupport 
@@ -17,16 +17,16 @@ object HttpMain extends App
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
   
-  initIngestionHub(Sink.foreach { droneInfo => 
-    println("GOT: " + droneInfo)
+  initIngestionHub(Sink.foreach { droneData =>
+    println("GOT: " + droneData)
     // TODO replace with sending data to cluster,
     // - shardded since we have the drone's id
   })
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
-  def decodeDroneInfo: Flow[Message, DroneInfo, NotUsed] =
-    Flow[Message].via(this.toStrictText).map(_ => DroneInfo(null, 2, 1, 1)) // FIXME decoding
+  def decodeDroneInfo: Flow[Message, DroneData, NotUsed] =
+    Flow[Message].via(this.toStrictText).map(_ => DroneData(1, Ready, null, 0.0, 0, 0)) // FIXME decoding
 
   def encodeServerCommand: Flow[ServerCommand, Message, NotUsed] =  
     Flow.fromFunction(_ => TextMessage("")) // TODO render commands

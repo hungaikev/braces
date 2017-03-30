@@ -24,7 +24,7 @@ object Main {
     }
 
     Thread.sleep(5000)
-    ClusterSharding(systems.head).shardRegion("Drone") ! DroneData(1, Ready, DroneInfo(DronePosition(0.0, 0.0), 0.0, 0, 100))
+    ClusterSharding(systems.head).shardRegion("Drone") ! DroneData(1, Ready, DronePosition(0.0, 0.0), 0.0, 0, 100)
 
     println(s"Backend server running\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
