@@ -1,21 +1,25 @@
 package org.h3nk3.braces.backend
 
-import akka.actor.{ActorIdentity, ActorPath, ActorSystem, Identify, PoisonPill, Props}
-import akka.cluster.sharding.ClusterSharding
+import akka.actor.{ActorIdentity, ActorPath, ActorRef, ActorSystem, Identify, PoisonPill, Props}
+import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
 import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStore}
 import akka.util.Timeout
 import akka.pattern.ask
 import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.DroneManager.{StartDrones, SurveillanceArea}
+import org.h3nk3.braces.backend.DroneManager.{Initiate, StopDrones, SurveillanceArea}
 import org.h3nk3.braces.domain.Domain._
 
+import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
 
-object Main {
+object Main extends InputParser {
+  var systems = Seq.empty[ActorSystem]
+  var droneManagerProxy: ActorRef = null
+
   def main(args: Array[String]): Unit = {
-    var systems = Seq.empty[ActorSystem]
+
     if (args.isEmpty) {
       systems = Seq(2551, 2552) map { startBackend(_) }
     } else {
@@ -23,12 +27,38 @@ object Main {
       systems = Seq(startBackend(port))
     }
 
-    Thread.sleep(5000)
-    ClusterSharding(systems.head).shardRegion("Drone") ! DroneData(1, Ready, DronePosition(0.0, 0.0), 0.0, 0, 100)
+    droneManagerProxy = systems.head.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(systems.head)), "droneManagerProxy")
+    println(s"Backend server running\nType 'e|exit' to quit the application. Type 'h|help' for information.")
+    commandLoop()
+  }
 
-    println(s"Backend server running\nPress RETURN to stop...")
-    StdIn.readLine() // let it run until user presses return
-    systems foreach { _.terminate() }
+  @tailrec
+  def commandLoop(): Unit = {
+    Cmd(StdIn.readLine()) match {
+      case Cmd.Initiate =>
+        println("Initiating application...")
+        initiate()
+        commandLoop()
+      case Cmd.Stop =>
+        println("Stopping application...")
+        stop()
+        commandLoop()
+      case Cmd.Exit =>
+        println("Exiting application. Bye!")
+        systems foreach { _.terminate() }
+      case Cmd.Help =>
+        println("Available commands:")
+        println("i: Initiate application")
+        println("a: Add drone")
+        println("s: Stop application")
+        println("h: Help")
+        println("e: Exit")
+      case Cmd.AddDrone =>
+        println("Adding drone...")
+      case Cmd.Unknown(s) =>
+        println(s"Unknown command: $s")
+        commandLoop()
+    }
   }
 
   def startBackend(port: Int): ActorSystem = {
@@ -46,25 +76,28 @@ object Main {
         settings = ClusterSingletonManagerSettings(system)),
       "droneManager")
 
+    // Try to produce a uniform distribution, i.e. same amount of entities in each shard.
+    // As a rule of thumb, the number of shards should be a factor ten greater than the planned maximum number of cluster nodes.
+    val numberOfShards = 100
+
+    def extractShardId: ShardRegion.ExtractShardId = {
+      case DroneData(id, _, _, _, _, _) => (id % numberOfShards).toString
+    }
+
+    def extractEntityId: ShardRegion.ExtractEntityId = {
+      case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
+    }
+
+    ClusterSharding(system).start(
+      typeName = "Drone",
+      entityProps = DroneActor.props(),
+      settings = ClusterShardingSettings(system),
+      extractEntityId = extractEntityId,
+      extractShardId = extractShardId
+    )
+
     // Start the shared local journal used in this demo
     startupSharedJournal(system, startThings, ActorPath.fromString("akka.tcp://BracesBackend@127.0.0.1:2551/user/store"))
-
-    if (startThings) {
-      // Look up the cluster singleton and send start message to it
-      val droneManagerProxy = system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(system)), "droneManagerProxy")
-
-      val saConf = system.settings.config.getConfig("braces.surveillance-area")
-
-      // This simulates some start up process of the system in that we "create" drones.
-      // In reality drones should register themselves when they start up.
-      // Since this is a simplified app we do not care about minor logical mishaps.
-      droneManagerProxy ! StartDrones(
-        SurveillanceArea(
-          DronePosition(saConf.getDouble("upper-left-lat"), saConf.getDouble("upper-left-long")),
-          DronePosition(saConf.getDouble("lower-right-lat"), saConf.getDouble("lower-right-long"))),
-        system.settings.config.getInt("braces.number-of-drones")
-      )
-    }
   }
 
   def startupSharedJournal(system: ActorSystem, startStore: Boolean, path: ActorPath): Unit = {
@@ -87,6 +120,28 @@ object Main {
         system.log.error("Lookup of shared journal at {} timed out", path)
         system.terminate()
     }
+  }
+
+  private def initiate(): Unit = {
+    val saConf = systems.head.settings.config.getConfig("braces.surveillance-area")
+
+    // This simulates some start up process of the system in that we "create" drones.
+    // In reality drones should register themselves when they start up.
+    // Since this is a simplified app we do not care about minor logical mishaps.
+    droneManagerProxy ! Initiate(
+      SurveillanceArea(
+        DronePosition(saConf.getDouble("upper-left-lat"), saConf.getDouble("upper-left-long")),
+        DronePosition(saConf.getDouble("lower-right-lat"), saConf.getDouble("lower-right-long"))),
+      systems.head.settings.config.getInt("braces.number-of-drones")
+    )
+  }
+
+  private def stop(): Unit = {
+    droneManagerProxy ! StopDrones
+  }
+
+  private def addDrone(): Unit = {
+    ClusterSharding(systems.head).shardRegion("Drone") ! DroneActor.InitDrone
   }
 }
 

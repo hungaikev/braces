@@ -5,68 +5,93 @@
  */
 package org.h3nk3.braces.backend
 
-import akka.actor.{Actor, ActorLogging, Props}
-import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
+import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import org.h3nk3.braces.domain.Domain._
 
 object DroneManager {
   def props: Props = Props[DroneManager]
-  case class SurveillanceArea(upperLeft: DronePosition, lowerRight: DronePosition)
-  case class StartDrones(area: SurveillanceArea, numberOfDrones: Int)
+  case class SurveillanceArea(upperLeft: DronePosition, lowerRight: DronePosition, coverage: Int = 0)
+  case class Initiate(area: SurveillanceArea, numberOfDrones: Int)
+  case class DroneStarted(actorRef: ActorRef)
+  case class DroneStopped(actorRef: ActorRef)
+  case class DroneTaskFinished(actorRef: ActorRef)
   case object StopDrones
 }
 
 class DroneManager extends Actor with ActorLogging {
   import DroneManager._
 
-  def readyState: Receive = {
-    case StartDrones(area, numberOfDrones) =>
-      val dividedAreas: List[SurveillanceArea] = divideAreas(area, numberOfDrones)
-      (1 to numberOfDrones).foreach { nbr =>
-        ClusterSharding(context.system).start(
-          typeName = "Drone",
-          entityProps = DroneActor.props(nbr, dividedAreas(nbr - 1)),
-          settings = ClusterShardingSettings(context.system),
-          extractEntityId = extractEntityId,
-          extractShardId = extractShardId
-        )
-      }
+  var availableDrones = Set.empty[ActorRef]
+  var dividedAreas = Set.empty[SurveillanceArea]
+  var workingDrones = Map.empty[ActorRef, SurveillanceArea]
+  var standbyDrones = Set.empty[ActorRef]
+  var id = 0
 
-      log.info("Drones started. Switching to Running State.")
-      runningState
+  def readyState: Receive = {
+    case Initiate(area, numberOfDrones) =>
+      dividedAreas = divideAreas(area, numberOfDrones)
+      log.info("DroneManager initiated. Switching to Running State.")
+      context.become(runningState)
+    case s =>
+      log.warning(s"Unexpected command '$s' in state ready.")
   }
 
   def runningState: Receive = {
+    case DroneStarted(actorRef) =>
+      availableDrones = availableDrones + actorRef
+      assignWork(actorRef)
+    case DroneStopped(actorRef) =>
+      handleStoppedDrone(actorRef)
+    case DroneTaskFinished(actorRef) =>
+      workingDrones = workingDrones - actorRef
     case StopDrones =>
+      // Improvement - we should instruct the drones to go back to base before just removing them like this...
+      availableDrones foreach { context.stop(_) }
       log.info("Drones stopped. Switching to Ready State.")
-      readyState
+      context.become(readyState)
+    case s =>
+      log.warning(s"Unexpected command '$s' in state running.")
   }
 
   def receive: Receive = readyState
-
-  // Try to produce a uniform distribution, i.e. same amount of entities in each shard.
-  // As a rule of thumb, the number of shards should be a factor ten greater than the planned maximum number of cluster nodes.
-  val numberOfShards = 100
-
-  def extractShardId: ShardRegion.ExtractShardId = {
-    case DroneData(id, _, _, _, _, _) => (id % numberOfShards).toString
-  }
-
-  def extractEntityId: ShardRegion.ExtractEntityId = {
-    case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
-  }
 
   /*
    * Yes, this is a very naive dividing function. It just splits the min/max latitude into equals parts based on number of drones.
    * In reality it should take into account range of drones, position/base of drones, etc.
    * This will suffice for our example code base though!
    */
-  def divideAreas(area: SurveillanceArea, nbrDrones: Int): List[SurveillanceArea] = {
+  def divideAreas(area: SurveillanceArea, nbrDrones: Int): Set[SurveillanceArea] = {
     val latPerDrone = (area.lowerRight.lat - area.upperLeft.lat) / nbrDrones
-    (1 to nbrDrones).foldLeft(List.empty[SurveillanceArea])((l, n) =>
+    (1 to nbrDrones).foldLeft(Seq.empty[SurveillanceArea])((l, n) =>
       SurveillanceArea(
         DronePosition(area.upperLeft.lat + latPerDrone * (n - 1), area.upperLeft.long),
         DronePosition(area.upperLeft.lat + latPerDrone * n, area.lowerRight.long)) +: l
-    )
+    ).toSet
+  }
+
+  def assignWork(actorRef: ActorRef): Unit = {
+    if (dividedAreas.nonEmpty) {
+      val area = dividedAreas.head
+      id += 1
+      actorRef ! DroneActor.DroneInitData(id, area)
+      workingDrones = workingDrones + (actorRef -> area)
+
+      dividedAreas = dividedAreas.tail
+    } else
+      standbyDrones = standbyDrones + actorRef
+  }
+
+  def handleStoppedDrone(actorRef: ActorRef): Unit = {
+    // Remove drone from available ones
+    availableDrones = availableDrones - actorRef
+
+    // Put back the area into the surveillance set
+    workingDrones.get(actorRef) map { area: SurveillanceArea => dividedAreas += area}
+
+    // Assign the work to a new actor
+    if (standbyDrones.nonEmpty) {
+      assignWork(standbyDrones.head)
+      standbyDrones = standbyDrones.tail
+    }
   }
 }

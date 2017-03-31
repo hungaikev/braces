@@ -26,11 +26,11 @@ class DroneManagerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFact
 
       areas1.head should equal(SurveillanceArea(upperLeftDronePosition, lowerRightDronePosition))
 
-      areas2(1) should equal(SurveillanceArea(DronePosition(0.0, 0.0), DronePosition(5.0, 10.0)))
-      areas2(0) should equal(SurveillanceArea(DronePosition(5.0, 0.0), DronePosition(10.0, 10.0)))
+      areas2 should contain(SurveillanceArea(DronePosition(0.0, 0.0), DronePosition(5.0, 10.0)))
+      areas2 should contain(SurveillanceArea(DronePosition(5.0, 0.0), DronePosition(10.0, 10.0)))
 
-      areas4(1) should equal(SurveillanceArea(DronePosition(5.0, 0.0), DronePosition(7.5, 10.0)))
-      areas4(0) should equal(SurveillanceArea(DronePosition(7.5, 0.0), DronePosition(10.0, 10.0)))
+      areas4 should contain(SurveillanceArea(DronePosition(5.0, 0.0), DronePosition(7.5, 10.0)))
+      areas4 should contain(SurveillanceArea(DronePosition(7.5, 0.0), DronePosition(10.0, 10.0)))
     }
   }
 }
