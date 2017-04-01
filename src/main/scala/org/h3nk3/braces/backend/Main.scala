@@ -7,12 +7,14 @@ import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStor
 import akka.util.Timeout
 import akka.pattern.ask
 import com.typesafe.config.ConfigFactory
+import org.h3nk3.braces.backend.DroneActor.InitDrone
 import org.h3nk3.braces.backend.DroneManager.{Initiate, StopDrones, SurveillanceArea}
 import org.h3nk3.braces.domain.Domain._
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
+import scala.util.Random
 
 object Main extends InputParser {
   var systems = Seq.empty[ActorSystem]
@@ -43,9 +45,6 @@ object Main extends InputParser {
         println("Stopping application...")
         stop()
         commandLoop()
-      case Cmd.Exit =>
-        println("Exiting application. Bye!")
-        systems foreach { _.terminate() }
       case Cmd.Help =>
         println("Available commands:")
         println("i: Initiate application")
@@ -53,11 +52,17 @@ object Main extends InputParser {
         println("s: Stop application")
         println("h: Help")
         println("e: Exit")
+        commandLoop()
       case Cmd.AddDrone =>
         println("Adding drone...")
+        addDrone()
+        commandLoop()
       case Cmd.Unknown(s) =>
         println(s"Unknown command: $s")
         commandLoop()
+      case Cmd.Exit =>
+        println("Exiting application. Bye!")
+        systems foreach { _.terminate() }
     }
   }
 
@@ -82,14 +87,16 @@ object Main extends InputParser {
 
     def extractShardId: ShardRegion.ExtractShardId = {
       case DroneData(id, _, _, _, _, _) => (id % numberOfShards).toString
+      case InitDrone => (Random.nextDouble() * numberOfShards).toInt.toString // TODO: using random here is probably not a good idea..
     }
 
     def extractEntityId: ShardRegion.ExtractEntityId = {
       case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
+      case msg @ InitDrone => ((Random.nextDouble() * numberOfShards).toInt.toString, msg) // TODO: using random here is probably not a good idea..
     }
 
     ClusterSharding(system).start(
-      typeName = "Drone",
+      typeName = DroneActor.DroneName,
       entityProps = DroneActor.props(),
       settings = ClusterShardingSettings(system),
       extractEntityId = extractEntityId,
@@ -125,9 +132,7 @@ object Main extends InputParser {
   private def initiate(): Unit = {
     val saConf = systems.head.settings.config.getConfig("braces.surveillance-area")
 
-    // This simulates some start up process of the system in that we "create" drones.
-    // In reality drones should register themselves when they start up.
-    // Since this is a simplified app we do not care about minor logical mishaps.
+    // Instructs the DM what area to perform surveillance on and how many drones to expect
     droneManagerProxy ! Initiate(
       SurveillanceArea(
         DronePosition(saConf.getDouble("upper-left-lat"), saConf.getDouble("upper-left-long")),
@@ -141,7 +146,7 @@ object Main extends InputParser {
   }
 
   private def addDrone(): Unit = {
-    ClusterSharding(systems.head).shardRegion("Drone") ! DroneActor.InitDrone
+    ClusterSharding(systems.head).shardRegion(DroneActor.DroneName) ! InitDrone
   }
 }
 

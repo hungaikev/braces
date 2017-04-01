@@ -10,12 +10,12 @@ import org.h3nk3.braces.domain.Domain._
 
 object DroneManager {
   def props: Props = Props[DroneManager]
-  case class SurveillanceArea(upperLeft: DronePosition, lowerRight: DronePosition, coverage: Int = 0)
-  case class Initiate(area: SurveillanceArea, numberOfDrones: Int)
-  case class DroneStarted(actorRef: ActorRef)
-  case class DroneStopped(actorRef: ActorRef)
-  case class DroneTaskFinished(actorRef: ActorRef)
-  case object StopDrones
+  case class SurveillanceArea(upperLeft: DronePosition, lowerRight: DronePosition, coverage: Int = 0) extends Serializable
+  case class Initiate(area: SurveillanceArea, numberOfDrones: Int) extends Serializable
+  case class DroneStarted(actorRef: ActorRef) extends Serializable
+  case class DroneStopped(actorRef: ActorRef) extends Serializable
+  case class DroneTaskFinished(actorRef: ActorRef) extends Serializable
+  case object StopDrones extends Serializable
 }
 
 class DroneManager extends Actor with ActorLogging {
@@ -46,6 +46,7 @@ class DroneManager extends Actor with ActorLogging {
       workingDrones = workingDrones - actorRef
     case StopDrones =>
       // Improvement - we should instruct the drones to go back to base before just removing them like this...
+      log.info(s"Stopping all ${availableDrones.size} drones.")
       availableDrones foreach { context.stop(_) }
       log.info("Drones stopped. Switching to Ready State.")
       context.become(readyState)

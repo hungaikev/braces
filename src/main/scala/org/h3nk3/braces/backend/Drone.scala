@@ -9,11 +9,13 @@ import org.h3nk3.braces.domain.Domain._
 object DroneActor {
   def props(): Props = Props[DroneActor]
 
-  case class DroneInfo(id: Int, status: DroneStatus, knownUptime: Long, position: DronePosition, distanceCovered: Double)
-  case class DroneInitData(id: Int, surveillanceArea: SurveillanceArea)
-  case object InitDrone
+  final val DroneName = "Drone"
 
-  sealed trait DroneCommand
+  case class DroneInfo(id: Int, status: DroneStatus, knownUptime: Long, position: DronePosition, distanceCovered: Double) extends Serializable
+  case class DroneInitData(id: Int, surveillanceArea: SurveillanceArea) extends Serializable
+  case object InitDrone extends Serializable
+
+  sealed trait DroneCommand extends Serializable
   final case object DroneInfoCommand extends DroneCommand
 
   sealed trait DroneEvent extends Serializable
@@ -27,7 +29,7 @@ class DroneActor extends PersistentActor with ActorLogging {
     context.system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(context.system))) ! DroneManager.DroneStopped(self)
   }
 
-  override def persistenceId: String = "Drone-" + self.path.name
+  override def persistenceId: String = "Drone" + "-" + self.path.name
 
   var droneId: Int = 0
   var surveillanceArea: SurveillanceArea = null
