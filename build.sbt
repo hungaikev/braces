@@ -37,3 +37,4 @@ libraryDependencies ++= Seq(
 
 cinnamon in run := true
 cinnamon in test := true
+connectInput in run := true
