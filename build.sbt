@@ -29,10 +29,11 @@ libraryDependencies ++= Seq(
   "io.circe"          %% "circe-generic"        % "0.7.0",
   
   "org.scalatest"     %% "scalatest"    % scalaTestVersion % "test",
-  "com.typesafe.akka" %% "akka-testkit" % akkaVersion      % "test",
+  "com.typesafe.akka" %% "akka-testkit" % akkaVersion      % "test"
+  //,
 
   // Adds monitoring capabilities to the project
-  Cinnamon.library.cinnamonSandbox
+  // Cinnamon.library.cinnamonSandbox
 )
 
 cinnamon in run := true

@@ -36,7 +36,7 @@ object HttpMain_Step5_SharedIngestionHub extends App
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
       handleWebSocketMessages(
         CoupledTerminationFlow.fromSinkAndSource(
-          in = Flow[Message].via(conversion).map(it => droneId -> it).to(ingestionHub),
+          in = Flow[Message].via(conversion).to(ingestionHub),
           out = Source.maybe[Message]
         )
       )

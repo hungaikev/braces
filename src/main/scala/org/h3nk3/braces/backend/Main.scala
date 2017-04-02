@@ -8,7 +8,7 @@ import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStor
 import akka.util.Timeout
 import akka.pattern.ask
 import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.DroneActor.InitDrone
+import org.h3nk3.braces.backend.DroneShadow.InitDrone
 import org.h3nk3.braces.backend.DroneManager.{Initiate, StopDrones, SurveillanceArea}
 import org.h3nk3.braces.domain.Domain._
 
@@ -77,6 +77,7 @@ object Main extends InputParser {
 
   def bootstrap(system: ActorSystem, startThings: Boolean): Unit = {
     // todo only on first
+    
     system.actorOf(
       ClusterSingletonManager.props(
         singletonProps = DroneManager.props,
@@ -84,14 +85,8 @@ object Main extends InputParser {
         settings = ClusterSingletonManagerSettings(system)),
       "droneManager") 
     
-    ClusterSharding(system).start(
-      typeName = DroneActor.DroneName,
-      entityProps = DroneActor.props(),
-      settings = ClusterShardingSettings(system),
-      extractEntityId = DroneActor.extractEntityId,
-      extractShardId = DroneActor.extractShardId
-    )
-
+    DroneShadow.startSharding(system)
+    
     // Start the shared local journal used in this demo
     startupSharedJournal(system, startThings, ActorPath.fromString("akka.tcp://BracesBackend@127.0.0.1:2551/user/store"))
   }
@@ -135,7 +130,7 @@ object Main extends InputParser {
   }
 
   private def addDrone(): Unit = {
-    ClusterSharding(systems.head).shardRegion(DroneActor.DroneName) ! DroneActor.InitDrone
+    ClusterSharding(systems.head).shardRegion(DroneShadow.DroneName) ! DroneShadow.InitDrone
   }
 }
 

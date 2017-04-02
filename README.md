@@ -94,3 +94,6 @@
   -> Akka HTTP backing Play Framework
   -> Akka Typed (!)
   -> Akka Distributed Data is stable (!)
+
+
+FOR THE FAILOVER: make Main be able to run on more ports so we can start a new one

@@ -5,8 +5,9 @@
  */
 package org.h3nk3.braces.backend
 
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
+import org.h3nk3.braces.domain.Domain
 import org.h3nk3.braces.domain.Domain._
 
 object DroneManager {
@@ -51,7 +52,7 @@ class DroneManager extends Actor with ActorLogging {
     case StopDrones =>
       // Improvement - we should instruct the drones to go back to base before just removing them like this...
       log.info(s"Stopping all ${availableDrones.size} drones.")
-      availableDrones foreach { context.stop(_) }
+      availableDrones foreach { _ ! PoisonPill }
       // todo standby drones
       log.info("Drones stopped. Switching to Ready State.")
       context.become(readyState)
@@ -75,16 +76,16 @@ class DroneManager extends Actor with ActorLogging {
     ).toSet
   }
 
-  def assignWork(actorRef: ActorRef): Unit = {
+  def assignWork(droneShadow: ActorRef): Unit = {
     if (dividedAreas.nonEmpty) {
       val area = dividedAreas.head
       id += 1
-      actorRef ! DroneActor.DroneInitData(id, area)
-      workingDrones = workingDrones + (actorRef -> area)
+      droneShadow ! Domain.SurveilArea(area)
+      workingDrones = workingDrones + (droneShadow -> area)
 
       dividedAreas = dividedAreas.tail
     } else
-      standbyDrones = standbyDrones + actorRef
+      standbyDrones = standbyDrones + droneShadow
   }
 
   def handleStoppedDrone(actorRef: ActorRef): Unit = {
