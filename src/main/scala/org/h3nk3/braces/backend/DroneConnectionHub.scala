@@ -1,30 +1,21 @@
 package org.h3nk3.braces.backend
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
-import akka.actor.Actor.Receive
-import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Deploy, PoisonPill, Props, Terminated}
+import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.model.ws.Message
-import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Keep, Sink, Source, SourceQueueWithComplete}
-import org.h3nk3.braces.backend.DroneActor.InitDrone
-import org.h3nk3.braces.backend.DroneConnectionHub.{DroneArrive, DroneAway, DroneHandler, SendCommand}
+import akka.stream.{ActorMaterializer, OverflowStrategy}
 import org.h3nk3.braces.domain.Domain
-import org.h3nk3.braces.domain.Domain.DroneData
-import org.reactivestreams.Publisher
 
 object DroneConnectionHub {
   
-  def proxyProps(system: ActorSystem) =
-    ClusterSingletonProxy.props(s"/user/$name", ClusterSingletonProxySettings(system))
-  
-  def name = "droneClientConnectionHub"
+  def name = "droneConnectionHub"
   
   def props(): Props =
-    Props(new DroneConnectionHub)
-  
-  case class SendCommand(id: String, command: Domain.DroneClientCommand)
+    Props(new DroneConnectionHub).withDeploy(Deploy.local)
   
   case class DroneArrive(id: String)
   case class DroneAway(id: String)
@@ -33,38 +24,49 @@ object DroneConnectionHub {
   case class DroneHandler(flow: Flow[ws.Message, ws.Message, _])
 }
 
-/** Manages connections and pushes commands to field-deployed DroneClients */
+/** Manages connections and pushes commands to field-deployed Drones */
 class DroneConnectionHub extends Actor with ActorLogging {
   import DroneConnectionHub._
+  import org.h3nk3.braces.domain.JsonDomain._
+  
+  val DroneShadowsShard = DroneShadow.startSharding(context.system)
   
   implicit val mat = ActorMaterializer()
+  import context.dispatcher
   
-  var droneClientOut = Map.empty[String, SourceQueueWithComplete[Domain.DroneClientCommand]]
+  var DroneOut = Map.empty[String, ActorRef]
   
   override def receive: Receive = {
     case DroneArrive(droneId) =>
-      val (toDroneInputQueue, toDronePublisher) =
-        Source.queue[Domain.DroneClientCommand](32, OverflowStrategy.backpressure)
-          .map(_ => ???.asInstanceOf[ws.Message])
-        .toMat(Sink.asPublisher(false))(Keep.both).run()
+      log.info("Opening control connection with Drone [{}]", droneId, sender)
+      val (toDroneRef, toDronePublisher) =
+        Source.actorRef[Domain.DroneCommand](128, OverflowStrategy.dropHead)
+          .mapAsync(parallelism = 1)(cmd => Marshal(cmd).to[ws.Message])
+          .toMat(Sink.asPublisher(false))(Keep.both).run()
       
       val outToDrone: Source[Message, NotUsed] = Source.fromPublisher(toDronePublisher)
       
       val inFromDrone = Flow[ws.Message]
-        .map(msg => ???.asInstanceOf[DroneData])
-        .map(data => droneId -> data)
-        .to(Sink.actorRef(self, onCompleteMessage = DroneAway(droneId)))
+        .mapAsync(parallelism = 1)(msg => Unmarshal(msg).to[Domain.DroneData])
+        .to(Sink.foreach(data => DroneShadowsShard ! data)) 
       
-      droneClientOut = droneClientOut.updated(droneId, toDroneInputQueue)
+      DroneOut = DroneOut.updated(droneId, toDroneRef)
       
       sender() ! DroneHandler(
         CoupledTerminationFlow.fromSinkAndSource(inFromDrone, outToDrone)
       )
-      
-    case SendCommand(droneId, command) =>
-      droneClientOut.get(droneId) match {
-        case Some(queue) => //if queue.offer(command) => // push successful
-        case _ => log.warning("Unable to push command {} to drone [{}]!!!", command, droneId)
-      }
+
+    case DroneAway(id) =>
+      log.info("Removing drone client [{}]", id)
+      DroneOut = DroneOut - id
+
+    case DroneShadow.RequestDroneConnection =>
+      log.info("Offering field-deployed Drone connection to {}", sender())
+      context.watch(sender())
+      sender() ! DroneShadow.DroneConnection(DroneOut(sender().path.name))
+
+    case Terminated(ref) =>
+      val id = ref.path.name
+      log.warning("Backend Drone actor [{}] terminated. Out connection still available: {}", id, DroneOut.get(id).isDefined)
   }
 }

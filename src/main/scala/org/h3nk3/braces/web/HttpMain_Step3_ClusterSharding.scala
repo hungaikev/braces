@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.backend.DroneActor
+import org.h3nk3.braces.backend.DroneShadow
 import org.h3nk3.braces.domain.Domain
 import org.h3nk3.braces.domain.JsonDomain._
 
@@ -25,11 +25,11 @@ object HttpMain_Step3_ClusterSharding extends App
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
   val drone = ClusterSharding(system).start(
-    typeName = DroneActor.DroneName,
-    entityProps = DroneActor.props(),
+    typeName = DroneShadow.DroneName,
+    entityProps = DroneShadow.props(),
     settings = ClusterShardingSettings(system),
-    extractEntityId = DroneActor.extractEntityId,
-    extractShardId = DroneActor.extractShardId
+    extractEntityId = DroneShadow.extractEntityId,
+    extractShardId = DroneShadow.extractShardId
   )
   
 

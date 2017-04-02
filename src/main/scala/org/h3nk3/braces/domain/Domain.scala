@@ -12,6 +12,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.{Decoder, Json, jawn}
 import io.circe.export.Exported
 import io.circe.generic.AutoDerivation
+import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonFormat}
 
 /**
@@ -22,16 +23,16 @@ trait Domain {
 
   case class Base(id: String, position: Position)
 
+  case class DroneCommandError(string: String) 
+  
   // Events
   trait BracesEvent
-
+  
+  
   case class InitializeClient(clientId: String) extends BracesEvent
-
   case class DroneData(id: Int, status: DroneStatus, position: Position, velocity: Double, direction: Int, batteryPower: Int)
 
-  trait DroneStatus extends Serializable {
-    override def toString = super.toString.dropRight(1)
-  }
+  trait DroneStatus extends Serializable
   object DroneStatus {
     def fromString(s: String): DroneStatus = s match {
       case "Charging"    => Charging
@@ -47,9 +48,9 @@ trait Domain {
   case object Maintenance extends DroneStatus
   case object Stopped     extends DroneStatus
 
-  /** Commands set to the field-deployed DroneClients */
-  trait DroneClientCommand
-  final case class SurveilArea(upperLeft: Position, lowerRight: Position) extends DroneClientCommand
+  /** Commands set to the field-deployed Drones */
+  trait DroneCommand
+  final case class SurveilArea(area: SurveillanceArea) extends DroneCommand
 
   final case class Position(lat: Double, long: Double)
 

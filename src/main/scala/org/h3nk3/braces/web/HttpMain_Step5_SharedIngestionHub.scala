@@ -15,7 +15,7 @@ object HttpMain_Step5_SharedIngestionHub extends App
   with Directives with OurOwnWebSocketSupport 
   with SharedIngestionHub {
   
-  implicit val system = ActorSystem("HttpApp")
+  implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
 
@@ -36,8 +36,7 @@ object HttpMain_Step5_SharedIngestionHub extends App
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
       handleWebSocketMessages(
         CoupledTerminationFlow.fromSinkAndSource(
-          //FIXME : in = Flow[Message].via(conversion).map(it => droneId -> it).to(ingestionHub),
-          in = null,
+          in = Flow[Message].via(conversion).to(ingestionHub),
           out = Source.maybe[Message]
         )
       )

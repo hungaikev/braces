@@ -1,17 +1,18 @@
 package org.h3nk3.braces.drone
 
-
 import akka.NotUsed
 import akka.actor.ActorSystem
+import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorAttributes, ActorMaterializer}
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import com.typesafe.config.ConfigFactory
+import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 import org.h3nk3.braces.backend.InputParser
 import org.h3nk3.braces.domain.Domain._
 import org.h3nk3.braces.domain.JsonDomain
@@ -21,10 +22,11 @@ import scala.concurrent.duration._
 import scala.io.StdIn
 import scala.util.Random
 
-object DroneClient extends InputParser with JsonDomain {
+object Drone extends InputParser with JsonDomain {
 
-  implicit val sys = ActorSystem("DroneClient-" + System.currentTimeMillis(), ConfigFactory.load("drone-client.conf"))
+  implicit val sys = ActorSystem("Drone-" + System.currentTimeMillis(), ConfigFactory.load("drone-client.conf"))
   implicit val mat = ActorMaterializer()
+  val log = Logging(sys, getClass)
   import sys.dispatcher
 
   private val startTime: Long = System.currentTimeMillis()
@@ -45,12 +47,16 @@ object DroneClient extends InputParser with JsonDomain {
 
   def main(args: Array[String]): Unit = {
     if (args.isEmpty) {
-      println("**** You must provide a drone id when starting the drone client. ****")
+      println(Console.RED + "**** You must provide a drone id when starting the drone client. ****" + Console.RESET)
       System.exit(0)
     } else {
       droneId = args.head.toInt
       bootstrap()
-      println(s"Drone client $droneId running\nType 'e|exit' to quit the application. Type 'h|help' for information.")
+      println(
+        Console.GREEN + 
+        s"*** Drone client [$droneId running]\n" +
+        s"Type 'e|exit' to quit the application. Type 'h|help' for information." + 
+        Console.RESET)
       commandLoop()
     }
   }
@@ -79,14 +85,17 @@ object DroneClient extends InputParser with JsonDomain {
   }
 
   def bootstrap(): Unit = {
+    val url = s"${sys.settings.config.getString("braces.http-server")}drone/$droneId"
+    log.info("Connecting to: {}", url)
     Http().singleWebSocketRequest(
-      WebSocketRequest(s"${sys.settings.config.getString("braces.http-server")}drone/$droneId"),
+      WebSocketRequest(url),
       clientFlow = emitPositionAndMetrics)
   }
 
   def handleCommand(json: ws.Message): Unit = {
-    Unmarshal(json).to[DroneClientCommand] map {
-      case sa @ SurveilArea(lowerLeft, upperRight) =>
+    Unmarshal(json).to[DroneCommand] map {
+      case sa @ SurveilArea(area) =>
+        import area._
         this.lowerLeft = Some(lowerLeft)
         this.upperRight = Some(upperRight)
         incrementalLatDistance = (upperRight.lat - lowerLeft.lat) / xCoordinates
@@ -101,6 +110,7 @@ object DroneClient extends InputParser with JsonDomain {
       Source.tick(initialDelay = 1.second, interval = 1.second, tick = NotUsed)
         .map(_ => getCurrentInfo)
         .via(renderAsJson)
+        .log(s"Drone-$droneId").withAttributes(ActorAttributes.logLevels(onElement = Logging.InfoLevel))
         .map(TextMessage(_))
     )
 

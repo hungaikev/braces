@@ -2,10 +2,13 @@ package org.h3nk3.braces.domain
 
 import akka.event.Logging
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshalling.{Marshaller, Marshalling}
 import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.util.ByteString
-import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, JsonReader, RootJsonFormat}
+import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
+import org.h3nk3.braces.domain.Domain.SurveilArea
+import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, JsonReader, JsonWriter, RootJsonFormat}
 
 import scala.concurrent.Future
 
@@ -13,31 +16,38 @@ import scala.concurrent.Future
 trait JsonDomain extends SprayJsonSupport with DefaultJsonProtocol {
   implicit val DroneStatusFormat: RootJsonFormat[Domain.DroneStatus] = new RootJsonFormat[Domain.DroneStatus] {
     override def read(json: JsValue): Domain.DroneStatus = {
-      json.asJsObject.getFields("status").head match {
+      json.asJsObject.fields("status") match {
         case JsString(name) => Domain.DroneStatus.fromString(name)
       }
     }
     override def write(obj: Domain.DroneStatus): JsValue =
-      JsObject("status" -> JsString(obj.toString.dropRight(1)))
+      JsObject("status" -> JsString(obj.toString))
   }
   implicit val DronePositionFormat = jsonFormat2(Domain.Position)
-  implicit val DroneClientCommandFormat = new RootJsonFormat[Domain.DroneClientCommand] {
-    override def read(json: JsValue): Domain.DroneClientCommand = {
+  implicit val DroneCommandFormat = new RootJsonFormat[Domain.DroneCommand] {
+    override def read(json: JsValue): Domain.DroneCommand = {
       val o = json.asJsObject
       o.fields("type") match {
         case JsString("SurveilArea") => Domain.SurveilArea(
-          upperLeft = DronePositionFormat.read(o.fields("upperLeft")),
-          lowerRight = DronePositionFormat.read(o.fields("lowerRight"))
+          area = {
+            val a = o.fields("area").asJsObject
+            SurveillanceArea(
+              DronePositionFormat.read(a.fields("upperLeft")),
+              DronePositionFormat.read(a.fields("lowerRight"))
+            )
+          } 
         )
       }
     }
-    override def write(obj: Domain.DroneClientCommand): JsValue = {
+    override def write(obj: Domain.DroneCommand): JsValue = {
       obj match {
-        case Domain.SurveilArea(upperLeft, lowerRight) =>
+        case Domain.SurveilArea(area) =>
           JsObject(
             "type" -> JsString(Logging.simpleName(obj.getClass)),
-            "upperLeft" -> DronePositionFormat.write(upperLeft),
-            "lowerRight" -> DronePositionFormat.write(lowerRight)
+            "area" -> JsObject(
+              "upperLeft" -> DronePositionFormat.write(area.upperLeft),
+              "lowerRight" -> DronePositionFormat.write(area.lowerRight)
+            )
           )
       }
     }
@@ -52,6 +62,12 @@ trait JsonDomain extends SprayJsonSupport with DefaultJsonProtocol {
         Future.successful(reader.read(acc.utf8String.parseJson))
       }
     }
+  implicit def MessagesMarshalling[T](implicit writer: JsonWriter[T]): Marshaller[T, ws.Message] =
+    Marshaller[T, ws.Message] { implicit ec => value =>  
+        Future.successful(Marshalling.Opaque { () =>
+          ws.TextMessage(writer.write(value).prettyPrint)
+        } :: Nil)
+      }
 } 
 object JsonDomain extends JsonDomain
 

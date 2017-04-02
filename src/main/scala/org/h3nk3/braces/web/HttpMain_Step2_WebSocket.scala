@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink}
+import akka.stream.scaladsl.Flow
 import akka.util.Timeout
 import org.h3nk3.braces.backend.DroneConnectionHub
 import org.h3nk3.braces.domain.Domain
@@ -23,33 +23,22 @@ object HttpMain_Step2_WebSocket extends App
   implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
-  implicit val timeout = Timeout(1.second)
+  implicit val timeout = Timeout(10.second)
 
   val log = Logging(system, getClass)
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
-  val droneClientConnectionHub = system.actorOf(DroneConnectionHub.proxyProps(system), DroneConnectionHub.name)
+  val droneConnectionHub = system.actorOf(DroneConnectionHub.props())
   
   // format: OFF
   def routes =
     path("drone" / DroneId) { droneId =>
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
-      val reply = droneClientConnectionHub ? DroneConnectionHub.DroneArrive(droneId)
+      val reply = droneConnectionHub ? DroneConnectionHub.DroneArrive(droneId)
       onSuccess(reply.mapTo[DroneConnectionHub.DroneHandler]) { handler =>
         handleWebSocketMessages(handler.flow)
       }
-      
-//      // handling it in line would be as simple as:
-//      handleWebSocketMessages(
-//        CoupledTerminationFlow.fromSinkAndSource(
-//          in = Flow[Message]
-//                .via(conversion)
-//                .throttle(1, per = 1.second, maximumBurst = 1, mode = ThrottleMode.Shaping)
-//                .to(ingestionHub),
-//          out = Source.maybe[Message]
-//        )
-//      )
     }
   // format: ON
   
