@@ -91,7 +91,7 @@ object DroneClient extends InputParser with JsonDomain {
         this.upperRight = Some(upperRight)
         incrementalLatDistance = (upperRight.lat - lowerLeft.lat) / xCoordinates
         incrementalLongDistance = (upperRight.long - lowerLeft.long) / yCoordinates
-        println(s"Drone $droneId is now surveilling area: $sa")
+        println(s"> Drone $droneId is now surveilling area: $sa")
     }
   }
 

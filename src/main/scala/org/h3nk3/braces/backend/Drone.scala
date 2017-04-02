@@ -12,7 +12,7 @@ object DroneActor {
 
   final val DroneName = "Drone"
 
-  case class DroneInitData(id: Int, surveillanceArea: SurveillanceArea) extends Serializable
+  case class SurveilArea(area: SurveillanceArea) extends Serializable
   case object InitDrone extends Serializable
 
   sealed trait DroneCommand extends Serializable
@@ -54,9 +54,8 @@ class DroneActor extends PersistentActor with ActorLogging {
   override def preStart(): Unit = 
    droneManager ! DroneManager.DroneStarted(self)
   
-  
   override def receiveCommand: Receive = {
-    case DroneInitData(id, area) =>
+    case SurveilArea(area) =>
       log.info(s">> Drone: $droneId initialized with ${self.path} <<")
       // FIXME: send instructions to drone to initiate work
 

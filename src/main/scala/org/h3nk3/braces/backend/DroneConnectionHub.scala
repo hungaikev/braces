@@ -63,7 +63,7 @@ class DroneConnectionHub extends Actor with ActorLogging {
       
     case SendCommand(droneId, command) =>
       droneClientOut.get(droneId) match {
-        case Some(queue) if queue.offer(command) => // push successful
+        case Some(queue) => //if queue.offer(command) => // push successful
         case _ => log.warning("Unable to push command {} to drone [{}]!!!", command, droneId)
       }
   }

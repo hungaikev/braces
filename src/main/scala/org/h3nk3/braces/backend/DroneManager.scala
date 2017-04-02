@@ -29,7 +29,6 @@ class DroneManager extends Actor with ActorLogging {
   var dividedAreas = Set.empty[SurveillanceArea]
   var workingDrones = Map.empty[ActorRef, SurveillanceArea]
   var standbyDrones = Set.empty[ActorRef]
-  var id = 0
 
   def readyState: Receive = {
     case Initiate(area, numberOfDrones) =>
@@ -78,10 +77,8 @@ class DroneManager extends Actor with ActorLogging {
   def assignWork(actorRef: ActorRef): Unit = {
     if (dividedAreas.nonEmpty) {
       val area = dividedAreas.head
-      id += 1
-      actorRef ! DroneActor.DroneInitData(id, area)
+      actorRef ! DroneActor.SurveilArea(area)
       workingDrones = workingDrones + (actorRef -> area)
-
       dividedAreas = dividedAreas.tail
     } else
       standbyDrones = standbyDrones + actorRef
