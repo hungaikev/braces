@@ -1,7 +1,7 @@
 package org.h3nk3.braces.backend
 
 import akka.NotUsed
-import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
 import akka.actor.Actor.Receive
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
 import akka.http.scaladsl.model.ws
@@ -34,7 +34,7 @@ object DroneConnectionHub {
 }
 
 /** Manages connections and pushes commands to field-deployed DroneClients */
-class DroneConnectionHub extends Actor {
+class DroneConnectionHub extends Actor with ActorLogging {
   import DroneConnectionHub._
   
   implicit val mat = ActorMaterializer()
@@ -63,7 +63,8 @@ class DroneConnectionHub extends Actor {
       
     case SendCommand(droneId, command) =>
       droneClientOut.get(droneId) match {
-        case Some(queue) => queue
+        case Some(queue) if queue.offer(command) => // push successful
+        case _ => log.warning("Unable to push command {} to drone [{}]!!!", command, droneId)
       }
   }
 }

@@ -34,11 +34,11 @@ trait Domain {
   }
   object DroneStatus {
     def fromString(s: String): DroneStatus = s match {
-      case "Charging" => Charging
-      case "Ready" => Ready
-      case "Operating" => Operating
+      case "Charging"    => Charging
+      case "Ready"       => Ready
+      case "Operating"   => Operating
       case "Maintenance" => Maintenance
-      case "Stopped" => Stopped
+      case "Stopped"     => Stopped
     }
   }
   case object Charging    extends DroneStatus
