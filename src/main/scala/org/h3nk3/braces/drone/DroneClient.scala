@@ -50,7 +50,7 @@ object DroneClient extends InputParser with JsonDomain {
     } else {
       droneId = args.head.toInt
       bootstrap()
-      println(s"*** Drone client $droneId running\nType 'e|exit' to quit the application. Type 'h|help' for information.")
+      println(s"Drone client $droneId running\nType 'e|exit' to quit the application. Type 'h|help' for information.")
       commandLoop()
     }
   }
@@ -86,11 +86,12 @@ object DroneClient extends InputParser with JsonDomain {
 
   def handleCommand(json: ws.Message): Unit = {
     Unmarshal(json).to[DroneClientCommand] map {
-      case SurveilArea(lowerLeft, upperRight) =>
+      case sa @ SurveilArea(lowerLeft, upperRight) =>
         this.lowerLeft = Some(lowerLeft)
         this.upperRight = Some(upperRight)
         incrementalLatDistance = (upperRight.lat - lowerLeft.lat) / xCoordinates
         incrementalLongDistance = (upperRight.long - lowerLeft.long) / yCoordinates
+        println(s"Drone $droneId is now surveilling area: $sa")
     }
   }
 
@@ -123,8 +124,12 @@ object DroneClient extends InputParser with JsonDomain {
       100 - ((System.currentTimeMillis() - startTime) / 60000).toInt // drain 1 % per minute
     }
 
-    if (upperRight.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)
-    else DroneData(droneId, Ready, Position(0.0, 0.0), 0.0, 0, 100)
+    val data =
+      if (upperRight.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)
+      else DroneData(droneId, Ready, Position(0.0, 0.0), 0.0, 0, 100)
+
+    println(s"> $data")
+    data
   }
 
   val renderAsJson: Flow[DroneData, String, NotUsed] =
