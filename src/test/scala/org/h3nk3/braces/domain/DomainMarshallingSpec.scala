@@ -13,7 +13,7 @@ class DomainMarshallingSpec extends AkkaSpec with ScalaFutures {
   
   "Domain" should {
     "be marshalled to json" in {
-      val marshalled: Future[HttpEntity] = Marshal(DronePosition(12, 42)).to[HttpEntity]
+      val marshalled: Future[HttpEntity] = Marshal(Position(12, 42)).to[HttpEntity]
       val entity: HttpEntity = marshalled.futureValue
       entity should === (HttpEntity(ContentTypes.`application/json`, "{\"lat\":12.0,\"long\":42.0}"))
     }
