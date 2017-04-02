@@ -30,7 +30,7 @@ object HttpMain_Step4_AlpakkaSinks extends App
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
       handleWebSocketMessages(
         CoupledTerminationFlow.fromSinkAndSource(
-          in = Flow[Message].via(conversion).to(ingestionHub),
+          in = Flow[Message].via(conversion).to(???),
           out = Source.maybe[Message]
         )
       )
