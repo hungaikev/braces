@@ -15,7 +15,7 @@ trait CsvDomain {
       DroneData(
         next().toInt,
         Domain.DroneStatus.fromString(next()),
-        Domain.DronePosition(next().toDouble, next().toDouble),
+        Domain.Position(next().toDouble, next().toDouble),
         next().toDouble,
         next().toInt,
         next().toInt
