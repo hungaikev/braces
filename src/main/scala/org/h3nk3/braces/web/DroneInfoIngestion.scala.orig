@@ -1,0 +1,58 @@
+package org.h3nk3.braces.web
+
+import java.util.concurrent.atomic.AtomicReference
+
+import akka.NotUsed
+import akka.stream.{KillSwitches, Materializer}
+import akka.stream.scaladsl.{Keep, MergeHub, Sink, Source}
+import org.h3nk3.braces.domain.Domain._
+
+trait DroneInfoIngestion {
+
+  implicit def materializer: Materializer
+
+  val ingestionHub: Sink[DroneData, NotUsed] =
+  
+  lazy val ingestionHub: Sink[DroneInfo, NotUsed] =
+    DroneInfoIngestion.hubIngestion.get() match {
+      case null => throw new Exception("Not initialized consuming side of hub yet!")
+      case sink => sink
+    }
+  
+
+<<<<<<< HEAD:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestionService.scala
+  def initIngestionHub[M](sink: Sink[DroneData, M]): M =
+    DroneInfoIngestionService.hubIngestion.get() match {
+=======
+  def initIngestionHub[M](sink: Sink[DroneInfo, M]): M =
+    DroneInfoIngestion.hubIngestion.get() match {
+>>>>>>> even more WIP:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestion.scala
+      case null =>
+        val (mergeSink, mat) = 
+          MergeHub.source(perProducerBufferSize = 32)
+          .toMat(sink)(Keep.both)
+            .run()
+        
+        if (DroneInfoIngestion.hubIngestion.compareAndSet(null, mergeSink))
+          mat
+        else {
+          mergeSink.runWith(Source.empty) // complete the hub
+          null.asInstanceOf[M]
+        }
+        
+    }
+  
+  def shutdownIngestionHub(): Unit =
+    killSwitch.shutdown()
+}
+
+<<<<<<< HEAD:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestionService.scala
+object DroneInfoIngestionService {
+  private[braces] val hubIngestion = new AtomicReference[Sink[DroneData, NotUsed]]()
+  private[braces] val hubSource = new AtomicReference[Source[DroneData, NotUsed]]()
+=======
+object DroneInfoIngestion {
+  private[braces] val hubIngestion = new AtomicReference[Sink[DroneInfo, NotUsed]]()
+  private[braces] val hubSource = new AtomicReference[Source[DroneInfo, NotUsed]]()
+>>>>>>> even more WIP:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestion.scala
+}

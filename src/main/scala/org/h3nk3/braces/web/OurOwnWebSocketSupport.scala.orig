@@ -14,7 +14,11 @@ trait OurOwnWebSocketSupport {
 
   implicit def materializer: Materializer
   
+<<<<<<< HEAD
   def ingestionHub: Sink[DroneData, Any]
+  
+=======
+>>>>>>> more client, better class names
   val websocketEcho: Flow[Message, Message, Any] =
     Flow[Message]
       .via(toStrictText)

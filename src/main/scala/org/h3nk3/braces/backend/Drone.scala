@@ -1,6 +1,6 @@
 package org.h3nk3.braces.backend
 
-import akka.actor.{ActorLogging, Props}
+import akka.actor.{ActorLogging, ActorRef, Props}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
 import akka.persistence.PersistentActor
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
@@ -11,7 +11,6 @@ object DroneActor {
 
   final val DroneName = "Drone"
 
-  case class DroneInfo(id: Int, status: DroneStatus, knownUptime: Long, position: DronePosition, distanceCovered: Double) extends Serializable
   case class DroneInitData(id: Int, surveillanceArea: SurveillanceArea) extends Serializable
   case object InitDrone extends Serializable
 
@@ -31,18 +30,25 @@ class DroneActor extends PersistentActor with ActorLogging {
 
   override def persistenceId: String = "Drone" + "-" + self.path.name
 
+  var position: DronePosition = DronePosition(0, 0)
   var droneId: Int = 0
-  var surveillanceArea: SurveillanceArea = null
-  var droneInfo: DroneInfo = null
+  var surveillanceArea: SurveillanceArea = _
 
+
+  val droneManager: ActorRef = context.system.actorOf(DroneManager.props)
+  override def preStart(): Unit = 
+   droneManager ! DroneManager.DroneStarted(self)
+  
+  
   override def receiveCommand: Receive = {
-    case InitDrone =>
-      context.system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(context.system))) ! DroneManager.DroneStarted(self)
     case DroneInitData(id, area) =>
       log.info(s">> Drone: $droneId initialized with ${self.path} <<")
       // FIXME: send instructions to drone to initiate work
-    case DroneInfoCommand =>
-      sender ! droneInfo
+
+    case DroneData(id, status, pos, velocity, direction, batteryPower) =>
+      val distance = calcDistance(pos)
+      val event = DroneDataEvent(id, status, pos.lat, pos.long, velocity, direction, batteryPower, distance)
+      persist(event)(updateState)
   }
 
   override def receiveRecover: Receive = {
@@ -52,11 +58,10 @@ class DroneActor extends PersistentActor with ActorLogging {
   val updateState: DroneDataEvent => Unit = {
     case dde: DroneDataEvent =>
       val knownUptime = System.currentTimeMillis() - dde.createdTime
-      droneInfo = DroneInfo(dde.id, dde.status, knownUptime, DronePosition(dde.lat, dde.long), dde.distanceCovered)
+      log.info("Drone data event: " + (dde.id, dde.status, knownUptime, DronePosition(dde.lat, dde.long), dde.distanceCovered))
   }
 
   private def calcDistance(pos: DronePosition): Double = {
-    if (droneInfo eq null) 0.0
-    else Math.sqrt(Math.pow(Math.abs(pos.lat - droneInfo.position.lat), 2) + Math.pow(Math.abs(pos.long - droneInfo.position.long), 2))
+    Math.sqrt(Math.pow(Math.abs(pos.lat - position.lat), 2) + Math.pow(Math.abs(pos.long - position.long), 2))
   }
 }
