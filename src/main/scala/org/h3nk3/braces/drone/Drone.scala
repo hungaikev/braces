@@ -20,16 +20,28 @@ import org.h3nk3.braces.domain.JsonDomain
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
+import scala.util.Random
 
 object Drone extends InputParser with JsonDomain {
-  
+
   implicit val sys = ActorSystem("Drone-" + System.currentTimeMillis(), ConfigFactory.load("drone-client.conf"))
   implicit val mat = ActorMaterializer()
   val log = Logging(sys, getClass)
   import sys.dispatcher
 
-  // Drone work related info
-  @volatile private var area: Option[SurveillanceArea] = None
+  private val startTime: Long = System.currentTimeMillis()
+  private val basePosition: Position = Position(sys.settings.config.getDouble("braces.client.base.lat"), sys.settings.config.getDouble("braces.client.base.long"))
+  private val maxVelocity: Double = sys.settings.config.getDouble("braces.client.max-velocity")
+  private val xCoordinates: Int = sys.settings.config.getInt("braces.client.x-coordinates")
+  private val yCoordinates: Int = sys.settings.config.getInt("braces.client.y-coordinates")
+  private var currentPosition = 0
+
+  // Explain why this might need to be protected...
+  private var lowerLeft: Option[Position] = None
+  private var upperRight: Option[Position] = None
+  private var incrementalLatDistance: Double = 0.0
+  private var incrementalLongDistance: Double = 0.0
+
 
   var droneId: Int = 0
 
@@ -69,9 +81,6 @@ object Drone extends InputParser with JsonDomain {
       case Cmd.Stop =>
         // ignore
         commandLoop()
-      case Cmd.AddDrone =>
-        // ignore
-        commandLoop()
     }
   }
 
@@ -85,9 +94,13 @@ object Drone extends InputParser with JsonDomain {
 
   def handleCommand(json: ws.Message): Unit = {
     Unmarshal(json).to[DroneCommand] map {
-      case SurveilArea(area) =>
-        log.info("Received command to surveil: {}", area)
-        this.area = Some(area)
+      case sa @ SurveilArea(area) =>
+        import area._
+        this.lowerLeft = Some(lowerLeft)
+        this.upperRight = Some(upperRight)
+        incrementalLatDistance = (upperRight.lat - lowerLeft.lat) / xCoordinates
+        incrementalLongDistance = (upperRight.long - lowerLeft.long) / yCoordinates
+        println(s"> Drone $droneId is now surveilling area: $sa")
     }
   }
 
@@ -103,23 +116,30 @@ object Drone extends InputParser with JsonDomain {
 
   def getCurrentInfo: DroneData = {
     def position(): Position = {
-      Position(0.0, 0.0)
+      val latPos = (currentPosition % xCoordinates) * incrementalLatDistance
+      val longPos = (currentPosition / yCoordinates) * incrementalLongDistance
+      currentPosition += 1
+      Position(latPos, longPos)
     }
 
     def velocity(): Double = {
-      0.0
+      maxVelocity - Random.nextDouble() // let the velocity fluctuate a bit (depending on winds)
     }
 
-    def direction: Int = {
-      0
-    }
+    def direction: Int =
+      if ((currentPosition / yCoordinates) % 2 == 0) 90
+      else 270
 
     def batteryPower: Int = {
-      100
+      100 - ((System.currentTimeMillis() - startTime) / 60000).toInt // drain 1 % per minute
     }
 
-    if (area.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)
-    else DroneData(droneId, Ready, Position(0.0, 0.0), 0.0, 0, 100)
+    val data =
+      if (upperRight.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)
+      else DroneData(droneId, Ready, Position(0.0, 0.0), 0.0, 0, 100)
+
+    println(s"> $data")
+    data
   }
 
   val renderAsJson: Flow[DroneData, String, NotUsed] =
