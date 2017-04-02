@@ -93,4 +93,4 @@
     -> server push
   -> Akka HTTP backing Play Framework
   -> Akka Typed (!)
-  -> Akka Distributed Data is stable
+  -> Akka Distributed Data is stable (!)

@@ -2,10 +2,10 @@ package org.h3nk3.braces.domain
 
 import akka.event.Logging
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller}
-import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, JsonReader, RootJsonFormat}
 import akka.http.scaladsl.model.ws
+import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.util.ByteString
+import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, JsonReader, RootJsonFormat}
 
 import scala.concurrent.Future
 
