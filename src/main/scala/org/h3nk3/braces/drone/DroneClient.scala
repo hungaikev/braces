@@ -6,24 +6,26 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
+import akka.http.scaladsl.model.ws._
+import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import com.typesafe.config.ConfigFactory
 import org.h3nk3.braces.backend.InputParser
 import org.h3nk3.braces.domain.Domain._
-import org.h3nk3.braces.domain.OurDomainJsonSupport
+import org.h3nk3.braces.domain.JsonDomain
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
 import scala.util.Random
 
-object DroneClient extends InputParser with OurDomainJsonSupport {
-  import sys.dispatcher
+object DroneClient extends InputParser with JsonDomain {
+
   implicit val sys = ActorSystem("DroneClient-" + System.currentTimeMillis(), ConfigFactory.load("drone-client.conf"))
   implicit val mat = ActorMaterializer()
+  import sys.dispatcher
 
   private val startTime: Long = System.currentTimeMillis()
   private val basePosition: Position = Position(sys.settings.config.getDouble("braces.client.base.lat"), sys.settings.config.getDouble("braces.client.base.long"))
@@ -37,6 +39,7 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
   private var upperRight: Option[Position] = None
   private var incrementalLatDistance: Double = 0.0
   private var incrementalLongDistance: Double = 0.0
+
 
   var droneId: Int = 0
 
@@ -84,18 +87,19 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
       clientFlow = emitPositionAndMetrics)
   }
 
-  def handleCommand(json: akka.http.scaladsl.model.ws.Message): Unit = {
-    Unmarshal.apply(json).to[DroneClientCommand] map { _ match {
-      case SurveilArea(upperLeft, lowerRight) =>
-        this.lowerLeft = Some(upperLeft)
-        this.upperRight = Some(lowerRight)
-        incrementalLatDistance = 0
-    }}
+  def handleCommand(json: ws.Message): Unit = {
+    Unmarshal(json).to[DroneClientCommand] map {
+      case SurveilArea(lowerLeft, upperRight) =>
+        this.lowerLeft = Some(lowerLeft)
+        this.upperRight = Some(upperRight)
+        incrementalLatDistance = (upperRight.lat - lowerLeft.lat) / xCoordinates
+        incrementalLongDistance = (upperRight.long - lowerLeft.long) / yCoordinates
+    }
   }
 
   def emitPositionAndMetrics: Flow[Message, Message, Any] =
     CoupledTerminationFlow.fromSinkAndSource(
-      Sink.foreach(handleCommand(_)),
+      Sink.foreach(handleCommand),
       Source.tick(initialDelay = 1.second, interval = 1.second, tick = NotUsed)
         .map(_ => getCurrentInfo)
         .via(renderAsJson)
@@ -104,7 +108,10 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
 
   def getCurrentInfo: DroneData = {
     def position(): Position = {
-      Position(0.0, 0.0)
+      val latPos = (currentPosition % xCoordinates) * incrementalLatDistance
+      val longPos = (currentPosition / yCoordinates) * incrementalLongDistance
+      currentPosition += 1
+      Position(latPos, longPos)
     }
 
     def velocity(): Double = {

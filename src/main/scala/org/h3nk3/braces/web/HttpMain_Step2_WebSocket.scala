@@ -1,46 +1,46 @@
 package org.h3nk3.braces.web
 
 import akka.actor.ActorSystem
-import akka.cluster.singleton.ClusterSingletonProxy
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.{ActorMaterializer, ThrottleMode}
-import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.backend.DroneClientConnectionHub
+import akka.pattern.ask
+import akka.stream.ActorMaterializer
+import akka.stream.scaladsl.{Flow, Sink}
+import akka.util.Timeout
+import org.h3nk3.braces.backend.DroneConnectionHub
+import org.h3nk3.braces.domain.Domain
 
 import scala.concurrent.duration._
 
-object HttpMain_Step3_WebSocket extends App 
-  with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestion {
+object HttpMain_Step2_WebSocket extends App 
+  with Directives with OurOwnWebSocketSupport {
   
   import org.h3nk3.braces.domain.JsonDomain._
   
   implicit val system = ActorSystem("HttpApp")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
+  implicit val timeout = Timeout(1.second)
 
   val log = Logging(system, getClass)
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
-  initIngestionHub(Sink.ignore)
-
-  val droneClientConnectionHub = DroneClientConnectionHub.proxyProps(system)
+  val droneClientConnectionHub = system.actorOf(DroneConnectionHub.proxyProps(system), DroneConnectionHub.name)
   
   // format: OFF
   def routes =
     path("drone" / DroneId) { droneId =>
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
-      handleWebSocketMessages(
-        CoupledTerminationFlow.fromSinkAndSource(
-          in = Sink.actorRef(droneClientConnectionHub),
-          out = Source.maybe[Message]
-        )
-      )
+      val reply = droneClientConnectionHub ? DroneConnectionHub.DroneArrive(droneId)
+      onSuccess(reply.mapTo[DroneConnectionHub.DroneHandler]) { handler =>
+        handleWebSocketMessages(handler.flow)
+      }
+      
+//      // handling it in line would be as simple as:
 //      handleWebSocketMessages(
 //        CoupledTerminationFlow.fromSinkAndSource(
 //          in = Flow[Message]
@@ -55,7 +55,7 @@ object HttpMain_Step3_WebSocket extends App
   
   def DroneId = Segment
   
-  def conversion: Flow[Message, DroneInfo, Any] =
+  def conversion: Flow[Message, Domain.DroneData, Any] =
     Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(t => Unmarshal(t).to[DroneInfo])
+      .mapAsync(1)(bs => Unmarshal(bs).to[Domain.DroneData])
 }

@@ -1,6 +1,7 @@
 package org.h3nk3.braces.backend
 
 import akka.actor.{ActorLogging, ActorRef, Props}
+import akka.cluster.sharding.{ClusterShardingSettings, ShardRegion}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
 import akka.persistence.PersistentActor
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
@@ -19,6 +20,20 @@ object DroneActor {
 
   sealed trait DroneEvent extends Serializable
   final case class DroneDataEvent(id: Int, status: DroneStatus, lat: Double, long: Double, velocity: Double, direction: Int, batteryPower: Int, distanceCovered: Double, createdTime: Long = System.currentTimeMillis()) extends DroneEvent
+  
+  // --- cluster sharding --- 
+  
+  // Try to produce a uniform distribution, i.e. same amount of entities in each shard.
+  // As a rule of thumb, the number of shards should be a factor ten greater than the planned maximum number of cluster nodes.
+  private final val NumberOfShards = 100
+  
+  def extractShardId: ShardRegion.ExtractShardId = {
+    case DroneData(id, _, _, _, _, _) => (id % NumberOfShards).toString
+  }
+
+  def extractEntityId: ShardRegion.ExtractEntityId = {
+    case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
+  }
 }
 
 class DroneActor extends PersistentActor with ActorLogging {

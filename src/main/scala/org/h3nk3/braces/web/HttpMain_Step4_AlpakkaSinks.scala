@@ -8,11 +8,11 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.domain.Domain._
+import org.h3nk3.braces.domain.Domain
+import org.h3nk3.braces.domain.JsonDomain._
 
-object HttpMain_Step4_ClusterSharding extends App 
-  with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestion {
+object HttpMain_Step4_AlpakkaSinks extends App 
+  with Directives with OurOwnWebSocketSupport {
   
   implicit val system = ActorSystem("HttpApp")
   implicit val materializer = ActorMaterializer()
@@ -22,15 +22,15 @@ object HttpMain_Step4_ClusterSharding extends App
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
-  initIngestionHub(Sink.ignore)
-
+  ???
+  
   // format: OFF
   def routes =
     path("drone" / DroneId) { droneId =>
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
       handleWebSocketMessages(
         CoupledTerminationFlow.fromSinkAndSource(
-          in = Flow[Message].via(conversion).to(ingestionHub),
+          in = Flow[Message].via(conversion).to(???),
           out = Source.maybe[Message]
         )
       )
@@ -39,7 +39,7 @@ object HttpMain_Step4_ClusterSharding extends App
   
   def DroneId = Segment
   
-  def conversion: Flow[Message, DroneInfo, Any] =
+  def conversion: Flow[Message, Domain.DroneData, Any] =
     Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(t => Unmarshal(t).to[DroneInfo])
+      .mapAsync(1)(t => Unmarshal(t).to[Domain.DroneData])
 }

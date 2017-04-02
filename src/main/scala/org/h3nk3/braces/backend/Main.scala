@@ -3,6 +3,7 @@ package org.h3nk3.braces.backend
 import akka.actor.{ActorIdentity, ActorPath, ActorRef, ActorSystem, Identify, PoisonPill, Props}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
+import akka.event.Logging
 import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStore}
 import akka.util.Timeout
 import akka.pattern.ask
@@ -81,27 +82,14 @@ object Main extends InputParser {
         singletonProps = DroneManager.props,
         terminationMessage = PoisonPill,
         settings = ClusterSingletonManagerSettings(system)),
-      "droneManager")
-
-    // Try to produce a uniform distribution, i.e. same amount of entities in each shard.
-    // As a rule of thumb, the number of shards should be a factor ten greater than the planned maximum number of cluster nodes.
-    val numberOfShards = 100
-
-    def extractShardId: ShardRegion.ExtractShardId = {
-      case DroneData(id, _, _, _, _, _) => (id % numberOfShards).toString
-      case unknown => log.in
-    }
-
-    def extractEntityId: ShardRegion.ExtractEntityId = {
-      case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
-    }
-
+      "droneManager") 
+    
     ClusterSharding(system).start(
       typeName = DroneActor.DroneName,
       entityProps = DroneActor.props(),
       settings = ClusterShardingSettings(system),
-      extractEntityId = extractEntityId,
-      extractShardId = extractShardId
+      extractEntityId = DroneActor.extractEntityId,
+      extractShardId = DroneActor.extractShardId
     )
 
     // Start the shared local journal used in this demo
@@ -116,7 +104,7 @@ object Main extends InputParser {
     // register the shared journal
     import system.dispatcher
     implicit val timeout = Timeout(15.seconds)
-    val f = (system.actorSelection(path) ? Identify(None))
+    val f = system.actorSelection(path) ? Identify(None)
     f.onSuccess {
       case ActorIdentity(_, Some(ref)) => SharedLeveldbJournal.setStore(ref, system)
       case _ =>
