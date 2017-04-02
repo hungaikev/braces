@@ -45,7 +45,7 @@ class DroneActor extends PersistentActor with ActorLogging {
 
   override def persistenceId: String = "Drone" + "-" + self.path.name
 
-  var position: DronePosition = DronePosition(0, 0)
+  var position: Position = Position(0, 0)
   var droneId: Int = 0
   var surveillanceArea: SurveillanceArea = _
 
@@ -73,10 +73,10 @@ class DroneActor extends PersistentActor with ActorLogging {
   val updateState: DroneDataEvent => Unit = {
     case dde: DroneDataEvent =>
       val knownUptime = System.currentTimeMillis() - dde.createdTime
-      log.info("Drone data event: " + (dde.id, dde.status, knownUptime, DronePosition(dde.lat, dde.long), dde.distanceCovered))
+      log.info("Drone data event: " + (dde.id, dde.status, knownUptime, Position(dde.lat, dde.long), dde.distanceCovered))
   }
 
-  private def calcDistance(pos: DronePosition): Double = {
+  private def calcDistance(pos: Position): Double = {
     Math.sqrt(Math.pow(Math.abs(pos.lat - position.lat), 2) + Math.pow(Math.abs(pos.long - position.long), 2))
   }
 }

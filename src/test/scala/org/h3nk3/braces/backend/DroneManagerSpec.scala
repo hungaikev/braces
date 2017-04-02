@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
-import org.h3nk3.braces.domain.Domain.DronePosition
+import org.h3nk3.braces.domain.Domain.Position
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DroneManagerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFactory.parseString(""))) with WordSpecLike with Matchers {
@@ -13,8 +13,8 @@ class DroneManagerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFact
     "divide surveillance area based on number of drones" in {
       val droneManagerActor = TestActorRef[DroneManager].underlyingActor
 
-      val upperLeftDronePosition = DronePosition(0.0, 0.0)
-      val lowerRightDronePosition = DronePosition(10.0, 10.0)
+      val upperLeftDronePosition = Position(0.0, 0.0)
+      val lowerRightDronePosition = Position(10.0, 10.0)
       val sa = SurveillanceArea(upperLeftDronePosition, lowerRightDronePosition)
       val areas1 = droneManagerActor.divideAreas(sa, 1)
       val areas2 = droneManagerActor.divideAreas(sa, 2)
@@ -26,11 +26,11 @@ class DroneManagerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFact
 
       areas1.head should equal(SurveillanceArea(upperLeftDronePosition, lowerRightDronePosition))
 
-      areas2 should contain(SurveillanceArea(DronePosition(0.0, 0.0), DronePosition(5.0, 10.0)))
-      areas2 should contain(SurveillanceArea(DronePosition(5.0, 0.0), DronePosition(10.0, 10.0)))
+      areas2 should contain(SurveillanceArea(Position(0.0, 0.0), Position(5.0, 10.0)))
+      areas2 should contain(SurveillanceArea(Position(5.0, 0.0), Position(10.0, 10.0)))
 
-      areas4 should contain(SurveillanceArea(DronePosition(5.0, 0.0), DronePosition(7.5, 10.0)))
-      areas4 should contain(SurveillanceArea(DronePosition(7.5, 0.0), DronePosition(10.0, 10.0)))
+      areas4 should contain(SurveillanceArea(Position(5.0, 0.0), Position(7.5, 10.0)))
+      areas4 should contain(SurveillanceArea(Position(7.5, 0.0), Position(10.0, 10.0)))
     }
   }
 }

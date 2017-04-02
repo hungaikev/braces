@@ -124,8 +124,8 @@ object Main extends InputParser {
     // Instructs the DM what area to perform surveillance on and how many drones to expect
     droneManagerProxy ! Initiate(
       SurveillanceArea(
-        DronePosition(saConf.getDouble("upper-left-lat"), saConf.getDouble("upper-left-long")),
-        DronePosition(saConf.getDouble("lower-right-lat"), saConf.getDouble("lower-right-long"))),
+        Position(saConf.getDouble("upper-left-lat"), saConf.getDouble("upper-left-long")),
+        Position(saConf.getDouble("lower-right-lat"), saConf.getDouble("lower-right-long"))),
       systems.head.settings.config.getInt("braces.number-of-drones")
     )
   }

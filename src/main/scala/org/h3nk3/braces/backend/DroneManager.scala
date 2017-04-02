@@ -11,7 +11,7 @@ import org.h3nk3.braces.domain.Domain._
 
 object DroneManager {
   def props: Props = Props[DroneManager]
-  case class SurveillanceArea(upperLeft: DronePosition, lowerRight: DronePosition, coverage: Int = 0) extends Serializable
+  case class SurveillanceArea(upperLeft: Position, lowerRight: Position, coverage: Int = 0) extends Serializable
   case class Initiate(area: SurveillanceArea, numberOfDrones: Int) extends Serializable
   case class DroneStarted(actorRef: ActorRef) extends Serializable
   case class DroneStopped(actorRef: ActorRef) extends Serializable
@@ -70,8 +70,8 @@ class DroneManager extends Actor with ActorLogging {
     val latPerDrone = (area.lowerRight.lat - area.upperLeft.lat) / nbrDrones
     (1 to nbrDrones).foldLeft(Seq.empty[SurveillanceArea])((l, n) =>
       SurveillanceArea(
-        DronePosition(area.upperLeft.lat + latPerDrone * (n - 1), area.upperLeft.long),
-        DronePosition(area.upperLeft.lat + latPerDrone * n, area.lowerRight.long)) +: l
+        Position(area.upperLeft.lat + latPerDrone * (n - 1), area.upperLeft.long),
+        Position(area.upperLeft.lat + latPerDrone * n, area.lowerRight.long)) +: l
     ).toSet
   }
 

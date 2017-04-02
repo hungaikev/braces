@@ -20,14 +20,14 @@ import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonFor
  */
 trait Domain {
 
-  case class Base(id: String, position: DronePosition)
+  case class Base(id: String, position: Position)
 
   // Events
   trait BracesEvent
 
   case class InitializeClient(clientId: String) extends BracesEvent
 
-  case class DroneData(id: Int, status: DroneStatus, position: DronePosition, velocity: Double, direction: Int, batteryPower: Int)
+  case class DroneData(id: Int, status: DroneStatus, position: Position, velocity: Double, direction: Int, batteryPower: Int)
 
   trait DroneStatus extends Serializable {
     override def toString = super.toString.dropRight(1)
@@ -46,11 +46,12 @@ trait Domain {
   case object Operating   extends DroneStatus
   case object Maintenance extends DroneStatus
   case object Stopped     extends DroneStatus
-  
-  /** Commands set to the field-deployed DroneClients */ 
-  final case class DroneClientCommand(cmd: String)
-  
-  final case class DronePosition(lat: Double, long: Double)
+
+  /** Commands set to the field-deployed DroneClients */
+  trait DroneClientCommand
+  final case class SurveilArea(upperLeft: Position, lowerRight: Position) extends DroneClientCommand
+
+  final case class Position(lat: Double, long: Double)
 
   // additional things -----
   implicit final def jsonByteStringUnmarshaller[T](implicit u: FromEntityUnmarshaller[Json]): FromByteStringUnmarshaller[T] =
