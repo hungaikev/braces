@@ -20,7 +20,7 @@ class ImageAnalyzerSpec extends AkkaSpec(ImageAnalyzerSpec.config) {
   "ImageAnalyzer" should {
     val droneId = 123
     val date = new Date()
-    val position = DronePosition(10.0, 10.0)
+    val position = Position(10.0, 10.0)
     val pieceResolution = 1
 
     "not react on non shark images" in {

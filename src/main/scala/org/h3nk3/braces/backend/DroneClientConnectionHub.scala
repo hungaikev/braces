@@ -15,14 +15,14 @@ object DroneClientConnectionHub {
   def props(): Props =
     Props(new DroneClientConnectionHub)
   
-  case class SendCommand(id: String, )
+  case class SendCommand(id: String)
 }
 
 /** Manages connections and pushes commands to field-deployed DroneClients */
 class DroneClientConnectionHub extends Actor {
   
-  var droneClientOut = 
-  var droneClientIn = 
+  var droneClientOut = null
+  var droneClientIn = null
   
   override def receive: Receive = {
     case InitDrone => 

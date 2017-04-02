@@ -18,14 +18,14 @@ import io.circe.generic.AutoDerivation
  */
 trait Domain {
 
-  case class Base(id: String, position: DronePosition)
+  case class Base(id: String, position: Position)
 
   // Events
   trait BracesEvent
 
   case class InitializeClient(clientId: String) extends BracesEvent
 
-  case class DroneData(id: Int, status: DroneStatus, position: DronePosition, velocity: Double, direction: Int, batteryPower: Int)
+  case class DroneData(id: Int, status: DroneStatus, position: Position, velocity: Double, direction: Int, batteryPower: Int)
 
   trait DroneStatus extends Serializable
   case object Charging    extends DroneStatus
@@ -33,18 +33,19 @@ trait Domain {
   case object Operating   extends DroneStatus
   case object Maintenance extends DroneStatus
   case object Stopped     extends DroneStatus
-  
-  /** Commands set to the field-deployed DroneClients */ 
-  final case class DroneClientCommand(cmd: String)
-  
+
+  /** Commands set to the field-deployed DroneClients */
+  trait DroneClientCommand
+  final case class SurveilArea(upperLeft: Position, lowerRight: Position) extends DroneClientCommand
+
   /** server can signal commands to drone? */
   final case class DroneCommand()
 
-  final case class DronePosition(lat: Double, long: Double)
+  final case class Position(lat: Double, long: Double)
 
   final case class ServerCommand() // TODO do we need those?
 
-  final case class Image(droneId: Int, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
+  final case class Image(droneId: Int, imageId: Long, date: Date, position: Position, pieceResolution: Int, pieces: Array[Array[Int]])
   
   // additional things -----
   implicit final def jsonByteStringUnmarshaller[T](implicit u: FromEntityUnmarshaller[Json]): FromByteStringUnmarshaller[T] =

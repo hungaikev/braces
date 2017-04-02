@@ -9,7 +9,7 @@ class DroneInfoIngestionSpec extends AkkaSpec
   
   "DroneInfoIngestionService" should {
     "fail if consuming side has not started" in {
-      val incoming = Source.single(DroneData(1, Ready, DronePosition(1,1), 1, 0, 35))
+      val incoming = Source.single(DroneData(1, Ready, Position(1,1), 1, 0, 35))
       val ex = intercept[Exception] {
         ingestionHub.runWith(incoming)
       }
@@ -20,11 +20,11 @@ class DroneInfoIngestionSpec extends AkkaSpec
       initIngestionHub(Sink.actorRef(testActor, onCompleteMessage = "FULL_SHUTDOWN"))
       
       // new incoming connection from drone:
-      val i1 = DroneInfo("2B", DronePosition(10.0, 121.0), 1.0, 1, 92)
+      val i1 = DroneInfo("2B", Position(10.0, 121.0), 1.0, 1, 92)
       ingestionHub.runWith(Source.single(i1))
       
       // another drone connects
-      val i2 = DroneInfo("A2", DronePosition(10.0, 121.0), 1.0, 1, 92)
+      val i2 = DroneInfo("A2", Position(10.0, 121.0), 1.0, 1, 92)
       ingestionHub.runWith(Source.single(i1))
       
       // ^^^^--- these operations run async!
