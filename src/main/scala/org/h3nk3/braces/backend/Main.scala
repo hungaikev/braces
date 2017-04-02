@@ -50,14 +50,9 @@ object Main extends InputParser {
       case Cmd.Help =>
         println("Available commands:")
         println("i: Initiate application")
-        println("a: Add drone")
         println("s: Stop application")
         println("h: Help")
         println("e: Exit")
-        commandLoop()
-      case Cmd.AddDrone =>
-        println("Adding drone...")
-        addDrone()
         commandLoop()
       case Cmd.Unknown(s) =>
         println(s"Unknown command: $s")
@@ -133,9 +128,4 @@ object Main extends InputParser {
   private def stop(): Unit = {
     droneManagerProxy ! StopDrones
   }
-
-  private def addDrone(): Unit = {
-    ClusterSharding(systems.head).shardRegion(DroneActor.DroneName) ! DroneActor.InitDrone
-  }
 }
-

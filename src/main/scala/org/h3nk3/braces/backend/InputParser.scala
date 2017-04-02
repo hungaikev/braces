@@ -9,7 +9,6 @@ trait InputParser {
     case object Exit extends Cmd
     case object Initiate extends Cmd
     case object Stop extends Cmd
-    case object AddDrone extends Cmd
     case class Unknown(s: String) extends Cmd
     def apply(cmd: String): Cmd = {
       CmdParser.parse(cmd)
@@ -27,9 +26,8 @@ trait InputParser {
     def exit: Parser[Cmd.Exit.type] = "exit|e".r ^^ (_ => Cmd.Exit)
     def initiate: Parser[Cmd.Initiate.type] = "init|i".r ^^ (_ => Cmd.Initiate)
     def stop: Parser[Cmd.Stop.type] = "stop|s".r ^^ (_ => Cmd.Stop)
-    def addDrone: Parser[Cmd.AddDrone.type] = "add|a".r ^^ (_ => Cmd.AddDrone)
   }
 
   private val parser: CmdParser.Parser[Cmd] =
-    CmdParser.addDrone | CmdParser.stop | CmdParser.initiate | CmdParser.exit | CmdParser.help
+    CmdParser.stop | CmdParser.initiate | CmdParser.exit | CmdParser.help
 }
