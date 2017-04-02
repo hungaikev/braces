@@ -2,15 +2,11 @@ package org.h3nk3.braces.domain
 
 import java.util.Date
 
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromByteStringUnmarshaller, FromEntityUnmarshaller, Unmarshaller}
-import akka.http.scaladsl.util.FastFuture
 import akka.util.ByteString
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import io.circe.{Decoder, Json, jawn}
-import io.circe.export.Exported
 import io.circe.generic.AutoDerivation
+import io.circe.{Json, jawn}
 
 /**
  * Always use as: `import org.h3nk3.braces.domain.Domain._`
@@ -37,6 +33,7 @@ trait Domain {
   /** Commands set to the field-deployed DroneClients */
   trait DroneClientCommand
   final case class SurveilArea(upperLeft: Position, lowerRight: Position) extends DroneClientCommand
+  final case object GotoBase extends DroneClientCommand
 
   /** server can signal commands to drone? */
   final case class DroneCommand()

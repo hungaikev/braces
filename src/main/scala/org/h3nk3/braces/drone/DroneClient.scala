@@ -18,15 +18,25 @@ import org.h3nk3.braces.domain.OurDomainJsonSupport
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
+import scala.util.Random
 
 object DroneClient extends InputParser with OurDomainJsonSupport {
   import sys.dispatcher
   implicit val sys = ActorSystem("DroneClient-" + System.currentTimeMillis(), ConfigFactory.load("drone-client.conf"))
   implicit val mat = ActorMaterializer()
 
-  // Drone work related info
+  private val startTime: Long = System.currentTimeMillis()
+  private val basePosition: Position = Position(sys.settings.config.getDouble("braces.client.base.lat"), sys.settings.config.getDouble("braces.client.base.long"))
+  private val maxVelocity: Double = sys.settings.config.getDouble("braces.client.max-velocity")
+  private val xCoordinates: Int = sys.settings.config.getInt("braces.client.x-coordinates")
+  private val yCoordinates: Int = sys.settings.config.getInt("braces.client.y-coordinates")
+  private var currentPosition = 0
+
+  // Explain why this might need to be protected...
   private var upperLeft: Option[Position] = None
   private var lowerRight: Option[Position] = None
+  private var incrementalLatDistance: Double = 0.0
+  private var incrementalLongDistance: Double = 0.0
 
   var droneId: Int = 0
 
@@ -79,6 +89,7 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
       case SurveilArea(upperLeft, lowerRight) =>
         this.upperLeft = Some(upperLeft)
         this.lowerRight = Some(lowerRight)
+        incrementalLatDistance = 
     }}
   }
 
@@ -97,15 +108,15 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
     }
 
     def velocity(): Double = {
-      0.0
+      maxVelocity - Random.nextDouble() // let the velocity fluctuate a bit (depending on winds)
     }
 
-    def direction: Int = {
-      0
-    }
+    def direction: Int =
+      if ((currentPosition / yCoordinates) % 2 == 0) 90
+      else 270
 
     def batteryPower: Int = {
-      100
+      100 - ((System.currentTimeMillis() - startTime) / 60000).toInt // drain 1 % per minute
     }
 
     if (lowerRight.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)

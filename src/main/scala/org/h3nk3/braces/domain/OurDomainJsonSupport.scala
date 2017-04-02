@@ -1,12 +1,8 @@
 package org.h3nk3.braces.domain
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.marshalling.{Marshaller, Marshalling}
-import akka.http.scaladsl.model.ContentTypes
 import akka.http.scaladsl.server.directives.FramedEntityStreamingDirectives
-import spray.json.{DefaultJsonProtocol, RootJsonWriter}
-
-import scala.concurrent.Future
+import spray.json.DefaultJsonProtocol
 
 trait OurDomainJsonSupport extends SprayJsonSupport with DefaultJsonProtocol 
 with FramedEntityStreamingDirectives {
