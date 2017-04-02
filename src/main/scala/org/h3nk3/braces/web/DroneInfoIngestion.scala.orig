@@ -11,15 +11,22 @@ trait DroneInfoIngestion {
 
   implicit def materializer: Materializer
 
-  lazy val ingestionHub: Sink[DroneData, NotUsed] =
+  val ingestionHub: Sink[DroneData, NotUsed] =
+  
+  lazy val ingestionHub: Sink[DroneInfo, NotUsed] =
     DroneInfoIngestion.hubIngestion.get() match {
       case null => throw new Exception("Not initialized consuming side of hub yet!")
       case sink => sink
     }
   
 
+<<<<<<< HEAD:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestionService.scala
   def initIngestionHub[M](sink: Sink[DroneData, M]): M =
+    DroneInfoIngestionService.hubIngestion.get() match {
+=======
+  def initIngestionHub[M](sink: Sink[DroneInfo, M]): M =
     DroneInfoIngestion.hubIngestion.get() match {
+>>>>>>> even more WIP:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestion.scala
       case null =>
         val (mergeSink, mat) = 
           MergeHub.source(perProducerBufferSize = 32)
@@ -39,7 +46,13 @@ trait DroneInfoIngestion {
     killSwitch.shutdown()
 }
 
-object DroneInfoIngestion {
+<<<<<<< HEAD:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestionService.scala
+object DroneInfoIngestionService {
   private[braces] val hubIngestion = new AtomicReference[Sink[DroneData, NotUsed]]()
   private[braces] val hubSource = new AtomicReference[Source[DroneData, NotUsed]]()
+=======
+object DroneInfoIngestion {
+  private[braces] val hubIngestion = new AtomicReference[Sink[DroneInfo, NotUsed]]()
+  private[braces] val hubSource = new AtomicReference[Source[DroneInfo, NotUsed]]()
+>>>>>>> even more WIP:src/main/scala/org/h3nk3/braces/web/DroneInfoIngestion.scala
 }

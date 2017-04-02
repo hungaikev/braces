@@ -5,7 +5,8 @@
  */
 package org.h3nk3.braces.backend
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Props}
+import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
 import org.h3nk3.braces.domain.Domain._
 
 object DroneManager {
@@ -16,6 +17,9 @@ object DroneManager {
   case class DroneStopped(actorRef: ActorRef) extends Serializable
   case class DroneTaskFinished(actorRef: ActorRef) extends Serializable
   case object StopDrones extends Serializable
+  
+  def singletonProxyProps(system: ActorSystem): Props = 
+    ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(system))
 }
 
 class DroneManager extends Actor with ActorLogging {

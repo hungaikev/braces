@@ -1,12 +1,18 @@
 package org.h3nk3.braces.domain
 
+<<<<<<< HEAD
 import java.util.Date
 
+=======
+import akka.actor.Props
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromByteStringUnmarshaller, FromEntityUnmarshaller, Unmarshaller}
 import akka.http.scaladsl.util.FastFuture
+import akka.persistence.PersistentActor
 import akka.util.ByteString
+>>>>>>> even more WIP
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.{Decoder, Json, jawn}
 import io.circe.export.Exported
@@ -16,7 +22,7 @@ import io.circe.generic.AutoDerivation
  * Always use as: `import org.h3nk3.braces.domain.Domain._`
  * in order to enable automatic marshalling via Circe.
  */
-trait Domain {
+trait Domain extends FailFastCirceSupport with AutoDerivation {
 
   case class Base(id: String, position: DronePosition)
 
@@ -33,10 +39,7 @@ trait Domain {
   case object Operating   extends DroneStatus
   case object Maintenance extends DroneStatus
   case object Stopped     extends DroneStatus
-  
-  /** Commands set to the field-deployed DroneClients */ 
-  final case class DroneClientCommand(cmd: String)
-  
+
   /** server can signal commands to drone? */
   final case class DroneCommand()
 
@@ -44,20 +47,23 @@ trait Domain {
 
   final case class ServerCommand() // TODO do we need those?
 
+<<<<<<< HEAD
   final case class Image(droneId: Int, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
+=======
   
   // additional things -----
-  implicit final def jsonByteStringUnmarshaller[T](implicit u: FromEntityUnmarshaller[Json]): FromByteStringUnmarshaller[T] =
+  // TODO for entity streaming; propose inclusion of this in Akka-HTTP-json
+  implicit final def makeIt(): FromByteStringUnmarshaller[DroneInfo] = ???
+  
+  implicit final def jsonByteStringUnmarshaller[T](decoder: Decoder[T]): FromByteStringUnmarshaller[T] =
     Unmarshaller.strict[ByteString, Json] {
       case ByteString.empty => throw Unmarshaller.NoContentException
       case data => jawn.parseByteBuffer(data.asByteBuffer).fold(throw _, identity)
     }
-    .map(it => ???)
+    .map(decoder.decodeJson)
+    .map(_.right.get) // TODO make nicer
   
+>>>>>>> even more WIP
 }
 
 object Domain extends Domain
-object JsonDomain extends Domain with FailFastCirceSupport with AutoDerivation 
-object CsvDomain extends Domain {
-  // FIXME
-} 

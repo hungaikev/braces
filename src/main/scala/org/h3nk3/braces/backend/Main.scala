@@ -17,6 +17,7 @@ import scala.io.StdIn
 import scala.util.Random
 
 object Main extends InputParser {
+  
   var systems = Seq.empty[ActorSystem]
   var droneManagerProxy: ActorRef = null
 
@@ -88,12 +89,11 @@ object Main extends InputParser {
 
     def extractShardId: ShardRegion.ExtractShardId = {
       case DroneData(id, _, _, _, _, _) => (id % numberOfShards).toString
-      case InitDrone => (Random.nextDouble() * numberOfShards).toInt.toString // TODO: using random here is probably not a good idea..
+      case unknown => log.in
     }
 
     def extractEntityId: ShardRegion.ExtractEntityId = {
       case msg @ DroneData(id, _, _, _, _, _) => (id.toString, msg)
-      case msg @ InitDrone => ((Random.nextDouble() * numberOfShards).toInt.toString, msg) // TODO: using random here is probably not a good idea..
     }
 
     ClusterSharding(system).start(
@@ -147,7 +147,7 @@ object Main extends InputParser {
   }
 
   private def addDrone(): Unit = {
-    ClusterSharding(systems.head).shardRegion(DroneActor.DroneName) ! InitDrone
+    ClusterSharding(systems.head).shardRegion(DroneActor.DroneName) ! DroneActor.InitDrone
   }
 }
 
