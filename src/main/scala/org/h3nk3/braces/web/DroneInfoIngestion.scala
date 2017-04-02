@@ -36,7 +36,7 @@ trait DroneInfoIngestion {
     }
   
   def shutdownIngestionHub(): Unit =
-    killSwitch.shutdown()
+    ???
 }
 
 object DroneInfoIngestion {

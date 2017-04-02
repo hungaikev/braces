@@ -6,27 +6,29 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest}
+import akka.http.scaladsl.model.ws._
+import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import com.typesafe.config.ConfigFactory
 import org.h3nk3.braces.backend.InputParser
 import org.h3nk3.braces.domain.Domain._
-import org.h3nk3.braces.domain.OurDomainJsonSupport
+import org.h3nk3.braces.domain.JsonDomain
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
 
-object DroneClient extends InputParser with OurDomainJsonSupport {
-  import sys.dispatcher
+object DroneClient extends InputParser with JsonDomain {
+  
   implicit val sys = ActorSystem("DroneClient-" + System.currentTimeMillis(), ConfigFactory.load("drone-client.conf"))
   implicit val mat = ActorMaterializer()
+  import sys.dispatcher
 
   // Drone work related info
-  private var upperLeft: Option[Position] = None
-  private var lowerRight: Option[Position] = None
+  @volatile private var upperLeft: Option[Position] = None
+  @volatile private var lowerRight: Option[Position] = None
 
   var droneId: Int = 0
 
@@ -74,17 +76,17 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
       clientFlow = emitPositionAndMetrics)
   }
 
-  def handleCommand(json: akka.http.scaladsl.model.ws.Message): Unit = {
-    Unmarshal.apply(json).to[DroneClientCommand] map { _ match {
+  def handleCommand(json: ws.Message): Unit = {
+    Unmarshal(json).to[DroneClientCommand] map {
       case SurveilArea(upperLeft, lowerRight) =>
         this.upperLeft = Some(upperLeft)
         this.lowerRight = Some(lowerRight)
-    }}
+    }
   }
 
   def emitPositionAndMetrics: Flow[Message, Message, Any] =
     CoupledTerminationFlow.fromSinkAndSource(
-      Sink.foreach(handleCommand(_)),
+      Sink.foreach(handleCommand),
       Source.tick(initialDelay = 1.second, interval = 1.second, tick = NotUsed)
         .map(_ => getCurrentInfo)
         .via(renderAsJson)
