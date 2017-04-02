@@ -41,9 +41,6 @@ class DroneActor extends PersistentActor with ActorLogging {
     case DroneInitData(id, area) =>
       log.info(s">> Drone: $droneId initialized with ${self.path} <<")
       // FIXME: send instructions to drone to initiate work
-    case DroneData(id, status, position, velocity, direction, batteryPower) =>
-      val distance = calcDistance(position)
-      persist(DroneDataEvent(id, status, position.lat, position.long, velocity, direction, batteryPower, distance))(updateState)
     case DroneInfoCommand =>
       sender ! droneInfo
   }

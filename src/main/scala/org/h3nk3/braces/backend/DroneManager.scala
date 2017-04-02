@@ -48,6 +48,7 @@ class DroneManager extends Actor with ActorLogging {
       // Improvement - we should instruct the drones to go back to base before just removing them like this...
       log.info(s"Stopping all ${availableDrones.size} drones.")
       availableDrones foreach { context.stop(_) }
+      // todo standby drones
       log.info("Drones stopped. Switching to Ready State.")
       context.become(readyState)
     case s =>

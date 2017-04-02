@@ -74,6 +74,7 @@ object Main extends InputParser {
   }
 
   def bootstrap(system: ActorSystem, startThings: Boolean): Unit = {
+    // todo only on first
     system.actorOf(
       ClusterSingletonManager.props(
         singletonProps = DroneManager.props,
