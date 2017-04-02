@@ -75,9 +75,6 @@ object DroneClient extends InputParser with JsonDomain {
       case Cmd.Stop =>
         // ignore
         commandLoop()
-      case Cmd.AddDrone =>
-        // ignore
-        commandLoop()
     }
   }
 
