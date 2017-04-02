@@ -15,9 +15,8 @@ import org.h3nk3.braces.domain.Domain
 
 import scala.concurrent.duration._
 
-object HttpMain_Step3_WebSocket extends App 
-  with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestion {
+object HttpMain_Step2_WebSocket extends App 
+  with Directives with OurOwnWebSocketSupport {
   
   import org.h3nk3.braces.domain.JsonDomain._
   
@@ -29,8 +28,6 @@ object HttpMain_Step3_WebSocket extends App
   val log = Logging(system, getClass)
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
-
-  initIngestionHub(Sink.ignore)
 
   val droneClientConnectionHub = system.actorOf(DroneConnectionHub.proxyProps(system), DroneConnectionHub.name)
   

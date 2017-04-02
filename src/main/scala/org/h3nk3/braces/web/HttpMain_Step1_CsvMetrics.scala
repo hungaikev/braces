@@ -14,9 +14,8 @@ import org.h3nk3.braces.domain.{CsvDomain, Domain}
 
 import scala.concurrent.{Future, Promise}
 
-object HttpMain_Step2_CsvMetrics extends App 
+object HttpMain_Step1_CsvMetrics extends App 
   with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestion 
   with CsvDomain { 
 
   import org.h3nk3.braces.domain.Domain._
