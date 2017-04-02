@@ -11,7 +11,7 @@ import org.h3nk3.braces.domain.Domain
 object HttpMain_Step0 extends App 
   with Directives with OurOwnWebSocketSupport { 
 
-  implicit val system = ActorSystem("HttpApp")
+  implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
 

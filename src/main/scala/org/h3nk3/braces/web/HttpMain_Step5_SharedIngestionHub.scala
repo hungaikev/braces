@@ -15,7 +15,7 @@ object HttpMain_Step5_SharedIngestionHub extends App
   with Directives with OurOwnWebSocketSupport 
   with SharedIngestionHub {
   
-  implicit val system = ActorSystem("HttpApp")
+  implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
 

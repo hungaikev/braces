@@ -20,7 +20,7 @@ object HttpMain_Step1_CsvMetrics extends App
 
   import org.h3nk3.braces.domain.Domain._
   
-  implicit val system = ActorSystem("HttpApp")
+  implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
   
