@@ -2,6 +2,7 @@ package org.h3nk3.braces.domain
 
 import java.util.Date
 
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.MediaTypes.`application/json`
 import akka.http.scaladsl.unmarshalling.{FromByteStringUnmarshaller, FromEntityUnmarshaller, Unmarshaller}
@@ -11,6 +12,7 @@ import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 import io.circe.{Decoder, Json, jawn}
 import io.circe.export.Exported
 import io.circe.generic.AutoDerivation
+import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonFormat}
 
 /**
  * Always use as: `import org.h3nk3.braces.domain.Domain._`
@@ -27,7 +29,18 @@ trait Domain {
 
   case class DroneData(id: Int, status: DroneStatus, position: DronePosition, velocity: Double, direction: Int, batteryPower: Int)
 
-  trait DroneStatus extends Serializable
+  trait DroneStatus extends Serializable {
+    override def toString = super.toString.dropRight(1)
+  }
+  object DroneStatus {
+    def fromString(s: String): DroneStatus = s match {
+      case "Charging" => Charging
+      case "Ready" => Ready
+      case "Operating" => Operating
+      case "Maintenance" => Maintenance
+      case "Stopped" => Stopped
+    }
+  }
   case object Charging    extends DroneStatus
   case object Ready       extends DroneStatus
   case object Operating   extends DroneStatus
@@ -37,15 +50,8 @@ trait Domain {
   /** Commands set to the field-deployed DroneClients */ 
   final case class DroneClientCommand(cmd: String)
   
-  /** server can signal commands to drone? */
-  final case class DroneCommand()
-
   final case class DronePosition(lat: Double, long: Double)
 
-  final case class ServerCommand() // TODO do we need those?
-
-  final case class Image(droneId: Int, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
-  
   // additional things -----
   implicit final def jsonByteStringUnmarshaller[T](implicit u: FromEntityUnmarshaller[Json]): FromByteStringUnmarshaller[T] =
     Unmarshaller.strict[ByteString, Json] {
@@ -57,7 +63,3 @@ trait Domain {
 }
 
 object Domain extends Domain
-object JsonDomain extends Domain with FailFastCirceSupport with AutoDerivation 
-object CsvDomain extends Domain {
-  // FIXME
-} 

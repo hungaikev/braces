@@ -10,12 +10,14 @@ import akka.http.scaladsl.unmarshalling._
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import akka.util.ByteString
+import org.h3nk3.braces.domain.{CsvDomain, Domain}
 
 import scala.concurrent.{Future, Promise}
 
 object HttpMain_Step2_CsvMetrics extends App 
   with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestion { 
+  with DroneInfoIngestion 
+  with CsvDomain { 
 
   import org.h3nk3.braces.domain.Domain._
   
@@ -23,15 +25,6 @@ object HttpMain_Step2_CsvMetrics extends App
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
   
-  
-  
-  implicit val csvStreaming = EntityStreamingSupport.csv()
-  implicit val csvUnmarshalling: Unmarshaller[ByteString, DroneData] = 
-    Unmarshaller.strict { bs => 
-      bs.utf8String.split(",").toVector
-    }
-  implicit val csvMarshalling: Unmarshaller[ByteString, DroneData] = 
-    Unmarshaller.strict { bs => ??? }
   
   // format: OFF
   def routes =

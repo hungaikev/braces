@@ -8,6 +8,8 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
+import org.h3nk3.braces.domain.Domain
+import org.h3nk3.braces.domain.JsonDomain._
 
 object HttpMain_Step5_AlpakkaSinks extends App 
   with Directives with OurOwnWebSocketSupport 
@@ -40,7 +42,7 @@ object HttpMain_Step5_AlpakkaSinks extends App
   
   def DroneId = Segment
   
-  def conversion: Flow[Message, DroneInfo, Any] =
+  def conversion: Flow[Message, Domain.DroneData, Any] =
     Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(t => Unmarshal(t).to[DroneInfo])
+      .mapAsync(1)(t => Unmarshal(t).to[Domain.DroneData])
 }

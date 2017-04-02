@@ -12,40 +12,9 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import org.h3nk3.braces.backend.InputParser
 import org.h3nk3.braces.domain.Domain._
-import org.h3nk3.braces.domain.OurDomainJsonSupport
 
 import scala.concurrent.duration._
 
-object DroneClient extends InputParser with OurDomainJsonSupport {
-
-  val droneId = ThreadLocalRandom.current().nextInt(10)
-
-  implicit val sys = ActorSystem("DroneSystem-real-" + droneId)
-  implicit val mat = ActorMaterializer()
-  import sys.dispatcher
-
-
-  Http().singleWebSocketRequest(
-    WebSocketRequest(s"ws://127.0.0.1:8080/drone/$droneId"),
-    clientFlow = emitPositionAndMetrics)
-
-
-  def emitPositionAndMetrics: Flow[Message, Message, Any] =
-    CoupledTerminationFlow.fromSinkAndSource(
-      Sink.ignore,
-      Source.tick(initialDelay = 1.second, interval = 1.second, tick = NotUsed)
-        .map(_ => getCurrentPosition)
-        .via(renderAsJson)
-        .map(TextMessage(_))
-    )
-
-
-  def getCurrentPosition: DronePosition =
-    DronePosition(13, 37) // TODO make it move
-  
-  val renderAsJson: Flow[DronePosition, String, NotUsed] =
-    Flow[DronePosition]
-      .mapAsync(parallelism = 1)(p => Marshal(p).to[HttpEntity].flatMap(_.toStrict(1.seconds)))
-      .map(_.data.utf8String)
-  
+object DroneClient extends InputParser  {
+  ???
 }
