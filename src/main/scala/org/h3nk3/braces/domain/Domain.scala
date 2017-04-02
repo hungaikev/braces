@@ -32,7 +32,7 @@ trait Domain {
 
   /** Commands set to the field-deployed DroneClients */
   trait DroneClientCommand
-  final case class SurveilArea(upperLeft: Position, lowerRight: Position) extends DroneClientCommand
+  final case class SurveilArea(lowerLeft: Position, upperRight: Position) extends DroneClientCommand
   final case object GotoBase extends DroneClientCommand
 
   /** server can signal commands to drone? */

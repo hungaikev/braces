@@ -33,8 +33,8 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
   private var currentPosition = 0
 
   // Explain why this might need to be protected...
-  private var upperLeft: Option[Position] = None
-  private var lowerRight: Option[Position] = None
+  private var lowerLeft: Option[Position] = None
+  private var upperRight: Option[Position] = None
   private var incrementalLatDistance: Double = 0.0
   private var incrementalLongDistance: Double = 0.0
 
@@ -87,9 +87,9 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
   def handleCommand(json: akka.http.scaladsl.model.ws.Message): Unit = {
     Unmarshal.apply(json).to[DroneClientCommand] map { _ match {
       case SurveilArea(upperLeft, lowerRight) =>
-        this.upperLeft = Some(upperLeft)
-        this.lowerRight = Some(lowerRight)
-        incrementalLatDistance = 
+        this.lowerLeft = Some(upperLeft)
+        this.upperRight = Some(lowerRight)
+        incrementalLatDistance = 0
     }}
   }
 
@@ -119,7 +119,7 @@ object DroneClient extends InputParser with OurDomainJsonSupport {
       100 - ((System.currentTimeMillis() - startTime) / 60000).toInt // drain 1 % per minute
     }
 
-    if (lowerRight.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)
+    if (upperRight.isDefined) DroneData(droneId, Operating, position(), velocity, direction, batteryPower)
     else DroneData(droneId, Ready, Position(0.0, 0.0), 0.0, 0, 100)
   }
 
