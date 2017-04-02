@@ -29,7 +29,7 @@ object HttpMain_Step1_CsvMetrics extends App
   def routes =
     path("drone" / "data") {
       entity(asSourceOf[DroneData]) { infos =>
-        infos.to(ingestionHub).run()
+        infos.to(???).run()
         neverRespond()
       }
     }

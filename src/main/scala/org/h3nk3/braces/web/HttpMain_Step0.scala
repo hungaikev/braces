@@ -26,7 +26,4 @@ object HttpMain_Step0 extends App
 
 
 
-
-  override def ingestionHub: Sink[Domain.DroneData, Any] = Sink.ignore
-
 }
