@@ -4,8 +4,8 @@ import akka.stream.scaladsl.{Sink, Source}
 import org.h3nk3.braces.AkkaSpec
 import org.h3nk3.braces.domain.Domain._
 
-class DroneInfoIngestionServiceSpec extends AkkaSpec 
-  with DroneInfoIngestionService {
+class DroneInfoIngestionSpec extends AkkaSpec 
+  with DroneInfoIngestion {
   
   "DroneInfoIngestionService" should {
     "fail if consuming side has not started" in {

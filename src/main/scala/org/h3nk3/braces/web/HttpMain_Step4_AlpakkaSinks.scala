@@ -10,7 +10,7 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import org.h3nk3.braces.domain.Domain._
 
-object HttpMain_Step3_WebSocket extends App 
+object HttpMain_Step4_AlpakkaSinks extends App 
   with Directives with OurOwnWebSocketSupport 
   with DroneInfoIngestion {
   

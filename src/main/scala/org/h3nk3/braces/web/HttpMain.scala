@@ -11,7 +11,7 @@ import org.h3nk3.braces.domain.Domain.{DroneData, Ready, ServerCommand}
 
 object HttpMain extends App 
   with Directives with OurOwnWebSocketSupport 
-  with DroneInfoIngestionService { 
+  with DroneInfoIngestion { 
 
   implicit val system = ActorSystem("HttpApp")
   implicit val materializer = ActorMaterializer()
