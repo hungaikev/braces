@@ -16,7 +16,7 @@ import io.circe.generic.AutoDerivation
  * Always use as: `import org.h3nk3.braces.domain.Domain._`
  * in order to enable automatic marshalling via Circe.
  */
-trait Domain extends FailFastCirceSupport with AutoDerivation {
+trait Domain {
 
   case class Base(id: String, position: DronePosition)
 
@@ -44,17 +44,17 @@ trait Domain extends FailFastCirceSupport with AutoDerivation {
   final case class Image(droneId: Int, imageId: Long, date: Date, position: DronePosition, pieceResolution: Int, pieces: Array[Array[Int]])
   
   // additional things -----
-  // TODO for entity streaming; propose inclusion of this in Akka-HTTP-json
-  implicit final def makeIt(): FromByteStringUnmarshaller[DroneInfo] = ???
-  
-  implicit final def jsonByteStringUnmarshaller[T](decoder: Decoder[T]): FromByteStringUnmarshaller[T] =
+  implicit final def jsonByteStringUnmarshaller[T](implicit u: FromEntityUnmarshaller[Json]): FromByteStringUnmarshaller[T] =
     Unmarshaller.strict[ByteString, Json] {
       case ByteString.empty => throw Unmarshaller.NoContentException
       case data => jawn.parseByteBuffer(data.asByteBuffer).fold(throw _, identity)
     }
-    .map(decoder.decodeJson)
-    .map(_.right.get) // TODO make nicer
+    .map(it => ???)
   
 }
 
 object Domain extends Domain
+object JsonDomain extends Domain with FailFastCirceSupport with AutoDerivation 
+object CsvDomain extends Domain {
+  // FIXME
+} 

@@ -20,8 +20,6 @@ object HttpMain_Step0 extends App
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
-  override def ingestionHub: Sink[Any, Future[Done]] = Sink.ignore
-
   // format: OFF
   def routes =
     get {

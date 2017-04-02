@@ -49,7 +49,7 @@
     - Flow
     - Graphs
   -> handleWebsocketMessages
-  -> Spray JSON intro
+  -> Spray JSON intro / Circe
   -> show how to debug stages in the flow that throws exceptions
   -> show a couple of FlowOps methods to simulate various scenarios (without having a connected backend)
     (point out similarities with Scala collections):

@@ -6,13 +6,16 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.ActorMaterializer
+import akka.stream.{ActorMaterializer, ThrottleMode}
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.domain.Domain._
+
+import scala.concurrent.duration._
 
 object HttpMain_Step3_WebSocket extends App 
   with Directives with OurOwnWebSocketSupport 
   with DroneInfoIngestion {
+  
+  import org.h3nk3.braces.domain.JsonDomain._
   
   implicit val system = ActorSystem("HttpApp")
   implicit val materializer = ActorMaterializer()
@@ -30,7 +33,10 @@ object HttpMain_Step3_WebSocket extends App
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
       handleWebSocketMessages(
         CoupledTerminationFlow.fromSinkAndSource(
-          in = Flow[Message].via(conversion).to(ingestionHub),
+          in = Flow[Message]
+                .via(conversion)
+                .throttle(1, per = 1.second, maximumBurst = 1, mode = ThrottleMode.Shaping)
+                .to(ingestionHub),
           out = Source.maybe[Message]
         )
       )
