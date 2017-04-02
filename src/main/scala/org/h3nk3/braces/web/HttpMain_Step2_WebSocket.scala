@@ -20,7 +20,7 @@ object HttpMain_Step2_WebSocket extends App
   
   import org.h3nk3.braces.domain.JsonDomain._
   
-  implicit val system = ActorSystem("HttpApp")
+  implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
   implicit val timeout = Timeout(1.second)
