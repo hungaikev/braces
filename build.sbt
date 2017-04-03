@@ -25,15 +25,17 @@ libraryDependencies ++= Seq(
   
   "com.typesafe.akka" %% "akka-http"            % akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
-  "de.heikoseeberger" %% "akka-http-circe"      % "1.14.0",
-  "io.circe"          %% "circe-generic"        % "0.7.0",
+  "com.typesafe.akka" %% "akka-http-testkit"    % akkaHttpVersion,
+  
+  // Alpakka
+  "com.typesafe.akka" %% "akka-stream-kafka" % "0.14",
   
   "org.scalatest"     %% "scalatest"    % scalaTestVersion % "test",
   "com.typesafe.akka" %% "akka-testkit" % akkaVersion      % "test"
-  //,
 
   // Adds monitoring capabilities to the project
-  // Cinnamon.library.cinnamonSandbox
+  ,
+  Cinnamon.library.cinnamonSandbox
 )
 
 cinnamon in run := true

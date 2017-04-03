@@ -1,36 +1,33 @@
 package org.h3nk3.braces.backend
 
-import akka.actor.ActorSystem
-import akka.testkit.{TestActorRef, TestKit}
-import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
+import akka.actor.ActorRef
+import org.h3nk3.braces.AkkaSpec
+import org.h3nk3.braces.backend.DroneManager.{DronesStopped, Initiating, SurveillanceArea}
 import org.h3nk3.braces.domain.Position
 import org.scalatest.{Matchers, WordSpecLike}
 
-class DroneManagerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFactory.parseString(""))) with WordSpecLike with Matchers {
+import scala.concurrent.duration._
+
+class DroneManagerSpec 
+  extends AkkaSpec
+  with WordSpecLike with Matchers {
 
   "DroneManager" should {
     "divide surveillance area based on number of drones" in {
-      val droneManagerActor = TestActorRef[DroneManager].underlyingActor
+      val droneManagerActor: ActorRef = system.actorOf(DroneManager.props, "manager")
 
       val upperLeftDronePosition = Position(0.0, 0.0)
       val lowerRightDronePosition = Position(10.0, 10.0)
-      val sa = SurveillanceArea(upperLeftDronePosition, lowerRightDronePosition)
-      val areas1 = droneManagerActor.divideAreas(sa, 1)
-      val areas2 = droneManagerActor.divideAreas(sa, 2)
-      val areas4 = droneManagerActor.divideAreas(sa, 4)
+      
+      val area = SurveillanceArea(upperLeftDronePosition, lowerRightDronePosition)
 
-      areas1.size should be(1)
-      areas2.size should be(2)
-      areas4.size should be(4)
+      droneManagerActor ! DroneManager.Initiate(area, 10)
+      expectMsg(Initiating)
 
-      areas1.head should equal(SurveillanceArea(upperLeftDronePosition, lowerRightDronePosition))
+      expectNoMsg(100.millis)
 
-      areas2 should contain(SurveillanceArea(Position(0.0, 0.0), Position(5.0, 10.0)))
-      areas2 should contain(SurveillanceArea(Position(5.0, 0.0), Position(10.0, 10.0)))
-
-      areas4 should contain(SurveillanceArea(Position(5.0, 0.0), Position(7.5, 10.0)))
-      areas4 should contain(SurveillanceArea(Position(7.5, 0.0), Position(10.0, 10.0)))
+      droneManagerActor ! DroneManager.StopDrones
+      expectMsg(DronesStopped)
     }
   }
 }

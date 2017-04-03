@@ -1,17 +1,21 @@
 package org.h3nk3.braces.web
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.kafka.ProducerSettings
+import akka.kafka.scaladsl.Producer
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
+import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.common.serialization.{ByteArraySerializer, StringSerializer}
 import org.h3nk3.braces.domain.DroneData
-import org.h3nk3.braces.domain.JsonDomain._
 
-object HttpMain_Step4_AlpakkaSinks extends App 
+object HttpMain_Step4_WS_AlpakkaSinks extends App 
   with Directives with OurOwnWebSocketSupport {
   
   implicit val system = ActorSystem("BracesBackend")
@@ -22,24 +26,32 @@ object HttpMain_Step4_AlpakkaSinks extends App
   
   Http().bindAndHandle(routes, "127.0.0.1", 8080)
 
-  ???
+  
+  // ------ kafka setup ------
+  val producerSettings = ProducerSettings(system, new ByteArraySerializer, new StringSerializer)
+    .withBootstrapServers("localhost:9092")
   
   // format: OFF
   def routes =
     path("drone" / DroneId) { droneId =>
       log.info("Accepted websocket connection from Drone: [{}]", droneId)
       handleWebSocketMessages(
-        CoupledTerminationFlow.fromSinkAndSource(
-          in = Flow[Message].via(conversion).to(???),
-          out = Source.maybe[Message]
+        Flow.fromSinkAndSource(
+          sink = Flow[Message].via(conversion)
+              .to(akka.kafka.scaladsl.Producer.plainSink(producerSettings)),
+          source = Source.maybe[Message]
         )
       )
     }
   // format: ON
   
   def DroneId = Segment
+
+  def conversion: Flow[Message, ProducerRecord[Array[Byte], String], NotUsed] =
+    Flow[Message]
+      .flatMapConcat(_.asTextMessage.getStreamedText)
+      .map { payload =>
+        new ProducerRecord[Array[Byte], String]("topic1", payload)
+      }
   
-  def conversion: Flow[Message, DroneData, Any] =
-    Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(t => Unmarshal(t).to[DroneData])
 }

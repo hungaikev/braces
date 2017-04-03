@@ -12,11 +12,18 @@ import org.h3nk3.braces.domain.{DroneCommandError, Position, SurveilArea}
 object DroneManager {
   def props: Props = Props[DroneManager]
   case class SurveillanceArea(lowerLeft: Position, upperRight: Position, coverage: Int = 0) extends Serializable
+  
   case class Initiate(area: SurveillanceArea, numberOfDrones: Int) extends Serializable
+  case object Initiating extends Serializable
+  
   case class DroneStarted(actorRef: ActorRef) extends Serializable
+  
   case class DroneStopped(actorRef: ActorRef) extends Serializable
+  
   case class DroneTaskFinished(actorRef: ActorRef) extends Serializable
+  
   case object StopDrones extends Serializable
+  case object DronesStopped extends Serializable
 
   def singletonProxyProps(system: ActorSystem): Props =
     ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(system))
@@ -34,6 +41,7 @@ class DroneManager extends Actor with ActorLogging {
     case Initiate(area, numberOfDrones) =>
       dividedAreas = divideAreas(area, numberOfDrones)
       log.info("DroneManager initiated. Switching to Running State.")
+      sender() ! Initiating
       context become runningState
     case s =>
       log.warning(s"Unexpected command '$s' in state ready.")
@@ -49,10 +57,11 @@ class DroneManager extends Actor with ActorLogging {
       workingDrones = workingDrones - actorRef
     case StopDrones =>
       // Improvement - we should instruct the drones to go back to base before just removing them like this...
-      log.info(s"Stopping all ${availableDrones.size} drones.")
+      log.info(s"Stopping all ${availableDrones.size + standbyDrones.size} drones.")
       availableDrones foreach { _ ! PoisonPill }
-      // todo standby drones
+      standbyDrones foreach { _ ! PoisonPill }
       log.info("Drones stopped. Switching to Ready State.")
+      sender ! DronesStopped
       context become readyState
     case s =>
       log.warning(s"Unexpected command '$s' in state running.")

@@ -8,8 +8,8 @@ import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 import org.h3nk3.braces._
 import org.h3nk3.braces.domain._
 
-object DroneActor {
-  def props(): Props = Props[DroneActor]
+object Drone {
+  def props(): Props = Props[Drone]
 
   final val DroneName = "Drone"
 
@@ -36,11 +36,12 @@ object DroneActor {
   }
 }
 
-class DroneActor extends PersistentActor with ActorLogging {
-  import org.h3nk3.braces.backend.DroneActor._
+class Drone extends PersistentActor with ActorLogging {
+  import org.h3nk3.braces.backend.Drone._
 
   override def postStop(): Unit = {
-    context.system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(context.system))) ! DroneManager.DroneStopped(self)
+    val manager = context.system.actorOf(DroneManager.singletonProxyProps(context.system))
+    manager ! DroneManager.DroneStopped(self)
   }
 
   override def persistenceId: String = "Drone" + "-" + self.path.name
