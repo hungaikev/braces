@@ -1,19 +1,6 @@
 package org.h3nk3.braces.domain
 
-import java.util.Date
-
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
-import akka.http.scaladsl.model.HttpEntity
-import akka.http.scaladsl.model.MediaTypes.`application/json`
-import akka.http.scaladsl.unmarshalling.{FromByteStringUnmarshaller, FromEntityUnmarshaller, Unmarshaller}
-import akka.http.scaladsl.util.FastFuture
-import akka.util.ByteString
-import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
-import io.circe.{Decoder, Json, jawn}
-import io.circe.export.Exported
-import io.circe.generic.AutoDerivation
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
-import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonFormat}
 
 /**
  * Always use as: `import org.h3nk3.braces._`

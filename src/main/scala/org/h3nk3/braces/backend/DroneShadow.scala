@@ -52,8 +52,10 @@ object DroneShadow {
 class DroneShadow extends PersistentActor with ActorLogging {
   import org.h3nk3.braces.backend.DroneShadow._
 
+  val droneManageProxy: ActorRef = context.system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(context.system)))
+
   override def postStop(): Unit = {
-    context.system.actorOf(ClusterSingletonProxy.props("/user/droneManager", ClusterSingletonProxySettings(context.system))) ! DroneManager.DroneStopped(self)
+    droneManageProxy ! DroneManager.DroneStopped(self)
   }
 
   private val id = self.path.name
@@ -61,30 +63,23 @@ class DroneShadow extends PersistentActor with ActorLogging {
 
   var position: Position = Position(0, 0)
   var droneId: Int = 0
-  var surveillanceArea: SurveillanceArea = _
 
   /** Ref that transmits commands to field-deployed Drone via WebSocket messages */
   var DroneCommandOut: Option[ActorRef] = None
+  var surveilArea: Option[SurveilArea] = None
 
-  val droneManager: ActorRef = context.system.actorOf(DroneManager.props)
-  
-  override def preStart(): Unit = {
-    println("******** DRONESHADOW STARTED")
-    droneManager ! DroneManager.DroneStarted(self)
-  }
+  override def preStart(): Unit = droneManageProxy ! DroneManager.DroneStarted(self)
 
-  
   override def receiveCommand: Receive = {
     case cmd: SurveilArea =>
       log.info(s"Drone: {} initialized with {}", droneId, self.path)
-      
+
       // sends command via WebSocket to field-deployed Drone
       DroneCommandOut match {
         case None =>
           log.warning(s"Field-deployed Drone [{}] currently not connected! " +
-            s"Unable to send command {} to it.", id, cmd)
-          sender() ! DroneCommandError("Unable to reach field-deployed drone!")
-
+            s"Unable to send command {} to it. Storing the command locally until connection is available.", id, cmd)
+          surveilArea = Some(cmd)
         case Some(out) =>
           out forward cmd
       } 
@@ -100,6 +95,9 @@ class DroneShadow extends PersistentActor with ActorLogging {
     case DroneShadow.DroneConnection(out) => 
       log.info("Obtained deployed Drone connection. Able to send control commands.")
       DroneCommandOut = Some(out) // we store the out-connection, in order to send Commands to it
+      // If the surveil command is already available -> send it to the client
+      surveilArea foreach { out forward _ }
+
   }
 
   private def ensureFieldDeployedDroneConnection() = {

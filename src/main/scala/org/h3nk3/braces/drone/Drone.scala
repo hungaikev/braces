@@ -90,14 +90,12 @@ object Drone extends InputParser with JsonDomain {
   }
 
   def handleCommand(json: ws.Message): Unit = {
-    println("**************************** " + json)
     Unmarshal(json).to[DroneCommand] map {
       case sa @ SurveilArea(area) =>
         this.lowerLeft = Some(area.lowerLeft)
         this.upperRight = Some(area.upperRight)
         incrementalLatDistance = (area.upperRight.lat - area.lowerLeft.lat) / xCoordinates
         incrementalLongDistance = (area.upperRight.long - area.lowerLeft.long) / yCoordinates
-        println(s"> Drone $droneId is now surveilling area: $sa")
     }
   }
 

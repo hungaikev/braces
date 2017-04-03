@@ -7,8 +7,7 @@ package org.h3nk3.braces.backend
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
-import org.h3nk3.braces._
-import org.h3nk3.braces.domain.{Position, SurveilArea}
+import org.h3nk3.braces.domain.{DroneCommandError, Position, SurveilArea}
 
 object DroneManager {
   def props: Props = Props[DroneManager]
@@ -35,7 +34,7 @@ class DroneManager extends Actor with ActorLogging {
     case Initiate(area, numberOfDrones) =>
       dividedAreas = divideAreas(area, numberOfDrones)
       log.info("DroneManager initiated. Switching to Running State.")
-      context.become(runningState)
+      context become runningState
     case s =>
       log.warning(s"Unexpected command '$s' in state ready.")
   }
@@ -54,7 +53,7 @@ class DroneManager extends Actor with ActorLogging {
       availableDrones foreach { _ ! PoisonPill }
       // todo standby drones
       log.info("Drones stopped. Switching to Ready State.")
-      context.become(readyState)
+      context become readyState
     case s =>
       log.warning(s"Unexpected command '$s' in state running.")
   }
