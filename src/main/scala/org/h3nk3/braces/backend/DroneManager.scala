@@ -7,8 +7,8 @@ package org.h3nk3.braces.backend
 
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, PoisonPill, Props}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
-import org.h3nk3.braces.domain.Domain
-import org.h3nk3.braces.domain.Domain._
+import org.h3nk3.braces._
+import org.h3nk3.braces.domain.{Position, SurveilArea}
 
 object DroneManager {
   def props: Props = Props[DroneManager]
@@ -78,8 +78,7 @@ class DroneManager extends Actor with ActorLogging {
   def assignWork(droneShadow: ActorRef): Unit = {
     if (dividedAreas.nonEmpty) {
       val area = dividedAreas.head
-      actorRef ! DroneActor.SurveilArea(area)
-      droneShadow ! Domain.SurveilArea(area)
+      droneShadow ! SurveilArea(area)
       workingDrones = workingDrones + (droneShadow -> area)
       dividedAreas = dividedAreas.tail
     } else

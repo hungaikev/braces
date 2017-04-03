@@ -1,24 +1,16 @@
 package org.h3nk3.braces.web
 
-import akka.Done
 import akka.actor.ActorSystem
-import akka.http.scaladsl.common.EntityStreamingSupport
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshalling.Marshalling
-import akka.http.scaladsl.server.{Directives, StandardRoute}
-import akka.http.scaladsl.unmarshalling._
+import akka.http.scaladsl.server.Directives
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Sink
-import akka.util.ByteString
-import org.h3nk3.braces.domain.{CsvDomain, Domain}
+import org.h3nk3.braces.domain.{CsvDomain, DroneData}
 
-import scala.concurrent.{Future, Promise}
+import scala.concurrent.Promise
 
 object HttpMain_Step1_CsvMetrics extends App 
   with Directives with OurOwnWebSocketSupport 
-  with CsvDomain { 
-
-  import org.h3nk3.braces.domain.Domain._
+  with CsvDomain {
   
   implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()

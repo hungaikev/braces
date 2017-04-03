@@ -1,21 +1,19 @@
 package org.h3nk3.braces.backend
 
 import akka.actor.{ActorIdentity, ActorPath, ActorRef, ActorSystem, Identify, PoisonPill, Props}
-import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
+import akka.actor.{ActorIdentity, ActorPath, ActorRef, ActorSystem, Identify, PoisonPill, Props}
+import akka.cluster.sharding.ClusterSharding
 import akka.cluster.singleton.{ClusterSingletonManager, ClusterSingletonManagerSettings, ClusterSingletonProxy, ClusterSingletonProxySettings}
-import akka.event.Logging
+import akka.pattern.ask
 import akka.persistence.journal.leveldb.{SharedLeveldbJournal, SharedLeveldbStore}
 import akka.util.Timeout
-import akka.pattern.ask
 import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.DroneShadow.InitDrone
 import org.h3nk3.braces.backend.DroneManager.{Initiate, StopDrones, SurveillanceArea}
-import org.h3nk3.braces.domain.Domain._
+import org.h3nk3.braces.domain._
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
 import scala.io.StdIn
-import scala.util.Random
 
 object Main extends InputParser {
   

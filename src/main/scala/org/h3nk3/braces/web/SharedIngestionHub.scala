@@ -5,7 +5,8 @@ import java.util.concurrent.atomic.AtomicReference
 import akka.NotUsed
 import akka.stream.{KillSwitches, Materializer}
 import akka.stream.scaladsl.{Keep, MergeHub, Sink, Source}
-import org.h3nk3.braces.domain.Domain._
+import org.h3nk3.braces._
+import org.h3nk3.braces.domain.DroneData
 
 trait SharedIngestionHub {
 

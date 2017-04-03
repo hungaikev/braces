@@ -10,7 +10,8 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import org.h3nk3.braces.backend.DroneShadow
-import org.h3nk3.braces.domain.Domain
+import org.h3nk3.braces.domain._
+
 import org.h3nk3.braces.domain.JsonDomain._
 
 object HttpMain_Step3_ClusterSharding extends App 
@@ -48,7 +49,7 @@ object HttpMain_Step3_ClusterSharding extends App
   
   def DroneId = Segment
   
-  def conversion: Flow[Message, Domain.DroneData, Any] =
+  def conversion: Flow[Message, DroneData, Any] =
     Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(t => Unmarshal(t).to[Domain.DroneData])
+      .mapAsync(1)(t => Unmarshal(t).to[DroneData])
 }

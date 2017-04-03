@@ -16,10 +16,9 @@ import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 import spray.json.{DefaultJsonProtocol, JsObject, JsString, JsValue, RootJsonFormat}
 
 /**
- * Always use as: `import org.h3nk3.braces.domain.Domain._`
+ * Always use as: `import org.h3nk3.braces._`
  * in order to enable automatic marshalling via Circe.
  */
-trait Domain {
 
   case class Base(id: String, position: Position)
 
@@ -27,10 +26,9 @@ trait Domain {
   
   // Events
   trait BracesEvent
-  
-  
+
   case class InitializeClient(clientId: String) extends BracesEvent
-  case class DroneData(id: Int, status: DroneStatus, position: Position, velocity: Double, direction: Int, batteryPower: Int)
+  case class DroneData(id: Int, status: DroneStatus, position: Position, velocity: Double, direction: Int, batteryPower: Int) extends Serializable
 
   trait DroneStatus extends Serializable
   object DroneStatus {
@@ -52,16 +50,4 @@ trait Domain {
   trait DroneCommand
   final case class SurveilArea(area: SurveillanceArea) extends DroneCommand
 
-  final case class Position(lat: Double, long: Double)
-
-  // additional things -----
-  implicit final def jsonByteStringUnmarshaller[T](implicit u: FromEntityUnmarshaller[Json]): FromByteStringUnmarshaller[T] =
-    Unmarshaller.strict[ByteString, Json] {
-      case ByteString.empty => throw Unmarshaller.NoContentException
-      case data => jawn.parseByteBuffer(data.asByteBuffer).fold(throw _, identity)
-    }
-    .map(it => ???)
-  
-}
-
-object Domain extends Domain
+  final case class Position(lat: Double, long: Double) extends Serializable

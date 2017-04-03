@@ -5,14 +5,14 @@ import akka.cluster.sharding.{ClusterShardingSettings, ShardRegion}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
 import akka.persistence.PersistentActor
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
-import org.h3nk3.braces.domain.Domain._
+import org.h3nk3.braces._
+import org.h3nk3.braces.domain._
 
 object DroneActor {
   def props(): Props = Props[DroneActor]
 
   final val DroneName = "Drone"
 
-  case class SurveilArea(area: SurveillanceArea) extends Serializable
   case object InitDrone extends Serializable
 
   sealed trait DroneCommand extends Serializable

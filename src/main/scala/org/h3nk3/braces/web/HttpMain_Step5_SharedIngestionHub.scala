@@ -8,7 +8,7 @@ import akka.http.scaladsl.server.Directives
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
-import org.h3nk3.braces.domain.Domain
+import org.h3nk3.braces.domain.DroneData
 import org.h3nk3.braces.domain.JsonDomain._
 
 object HttpMain_Step5_SharedIngestionHub extends App 
@@ -26,7 +26,7 @@ object HttpMain_Step5_SharedIngestionHub extends App
   
   // all messages from all incoming connections are merged into this single stream:
   initIngestionHub(Sink.foreach {
-    case data: Domain.DroneData => println(data)
+    case data: DroneData => println(data)
     case other => println(other)
   })
   
@@ -46,7 +46,7 @@ object HttpMain_Step5_SharedIngestionHub extends App
   type DroneId = String
   def DroneId = Segment
   
-  def conversion: Flow[Message, Domain.DroneData, Any] =
+  def conversion: Flow[Message, DroneData, Any] =
     Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(t => Unmarshal(t).to[Domain.DroneData])
+      .mapAsync(1)(t => Unmarshal(t).to[DroneData])
 }

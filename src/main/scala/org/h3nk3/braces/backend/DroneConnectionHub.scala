@@ -2,13 +2,14 @@ package org.h3nk3.braces.backend
 
 import akka.NotUsed
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Deploy, PoisonPill, Props, Terminated}
+import akka.event.Logging
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Keep, Sink, Source, SourceQueueWithComplete}
-import akka.stream.{ActorMaterializer, OverflowStrategy}
-import org.h3nk3.braces.domain.Domain
+import akka.stream.{ActorAttributes, ActorMaterializer, OverflowStrategy}
+import org.h3nk3.braces.domain.{DroneCommand, DroneData}
 
 object DroneConnectionHub {
   
@@ -28,7 +29,7 @@ object DroneConnectionHub {
 class DroneConnectionHub extends Actor with ActorLogging {
   import DroneConnectionHub._
   import org.h3nk3.braces.domain.JsonDomain._
-  
+
   val DroneShadowsShard = DroneShadow.startSharding(context.system)
   
   implicit val mat = ActorMaterializer()
@@ -38,16 +39,17 @@ class DroneConnectionHub extends Actor with ActorLogging {
   
   override def receive: Receive = {
     case DroneArrive(droneId) =>
-      log.info("Opening control connection with Drone [{}]", droneId, sender)
+      log.info("Opening control connection with Drone [{}]", droneId)
       val (toDroneRef, toDronePublisher) =
-        Source.actorRef[Domain.DroneCommand](128, OverflowStrategy.dropHead)
+        Source.actorRef[DroneCommand](128, OverflowStrategy.dropHead)
           .mapAsync(parallelism = 1)(cmd => Marshal(cmd).to[ws.Message])
           .toMat(Sink.asPublisher(false))(Keep.both).run()
       
       val outToDrone: Source[Message, NotUsed] = Source.fromPublisher(toDronePublisher)
       
       val inFromDrone = Flow[ws.Message]
-        .mapAsync(parallelism = 1)(msg => Unmarshal(msg).to[Domain.DroneData])
+        .mapAsync(parallelism = 1)(msg => Unmarshal(msg).to[DroneData])
+          .log(s"from-drone-id: $droneId").withAttributes(ActorAttributes.logLevels(onElement = Logging.WarningLevel))
         .to(Sink.foreach(data => DroneShadowsShard ! data)) 
       
       DroneOut = DroneOut.updated(droneId, toDroneRef)

@@ -5,17 +5,14 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.{HttpEntity, ws}
 import akka.http.scaladsl.model.ws._
-import akka.http.scaladsl.model.ws
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.stream.{ActorAttributes, ActorMaterializer}
-import akka.stream.scaladsl.{CoupledTerminationFlow, Flow, Sink, Source}
 import com.typesafe.config.ConfigFactory
-import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
 import org.h3nk3.braces.backend.InputParser
-import org.h3nk3.braces.domain.Domain._
-import org.h3nk3.braces.domain.JsonDomain
+import org.h3nk3.braces.domain.{JsonDomain, _}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration._
@@ -93,19 +90,20 @@ object Drone extends InputParser with JsonDomain {
   }
 
   def handleCommand(json: ws.Message): Unit = {
+    println("**************************** " + json)
     Unmarshal(json).to[DroneCommand] map {
       case sa @ SurveilArea(area) =>
-        import area._
-        this.lowerLeft = Some(lowerLeft)
-        this.upperRight = Some(upperRight)
-        incrementalLatDistance = (upperRight.lat - lowerLeft.lat) / xCoordinates
-        incrementalLongDistance = (upperRight.long - lowerLeft.long) / yCoordinates
+        this.lowerLeft = Some(area.lowerLeft)
+        this.upperRight = Some(area.upperRight)
+        incrementalLatDistance = (area.upperRight.lat - area.lowerLeft.lat) / xCoordinates
+        incrementalLongDistance = (area.upperRight.long - area.lowerLeft.long) / yCoordinates
         println(s"> Drone $droneId is now surveilling area: $sa")
     }
   }
 
   def emitPositionAndMetrics: Flow[Message, Message, Any] =
-    CoupledTerminationFlow.fromSinkAndSource(
+    // FIXME: Coupled vs Flow
+    Flow.fromSinkAndSource(
       Sink.foreach(handleCommand),
       Source.tick(initialDelay = 1.second, interval = 1.second, tick = NotUsed)
         .map(_ => getCurrentInfo)

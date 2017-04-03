@@ -1,13 +1,11 @@
 package org.h3nk3.braces.backend
 
-import akka.actor.Status.Failure
 import akka.actor.{ActorLogging, ActorRef, ActorSystem, Props}
 import akka.cluster.sharding.{ClusterSharding, ClusterShardingSettings, ShardRegion}
 import akka.cluster.singleton.{ClusterSingletonProxy, ClusterSingletonProxySettings}
 import akka.persistence.PersistentActor
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
-import org.h3nk3.braces.domain.Domain
-import org.h3nk3.braces.domain.Domain._
+import org.h3nk3.braces.domain._
 
 object DroneShadow {
   def props(): Props = Props[DroneShadow]
@@ -70,12 +68,14 @@ class DroneShadow extends PersistentActor with ActorLogging {
 
   val droneManager: ActorRef = context.system.actorOf(DroneManager.props)
   
-  override def preStart(): Unit = 
+  override def preStart(): Unit = {
+    println("******** DRONESHADOW STARTED")
     droneManager ! DroneManager.DroneStarted(self)
-  
+  }
+
   
   override def receiveCommand: Receive = {
-    case cmd: Domain.SurveilArea =>
+    case cmd: SurveilArea =>
       log.info(s"Drone: {} initialized with {}", droneId, self.path)
       
       // sends command via WebSocket to field-deployed Drone
@@ -83,7 +83,7 @@ class DroneShadow extends PersistentActor with ActorLogging {
         case None =>
           log.warning(s"Field-deployed Drone [{}] currently not connected! " +
             s"Unable to send command {} to it.", id, cmd)
-          sender() ! Domain.DroneCommandError("Unable to reach field-deployed drone!")
+          sender() ! DroneCommandError("Unable to reach field-deployed drone!")
 
         case Some(out) =>
           out forward cmd

@@ -4,7 +4,7 @@ import akka.actor.ActorSystem
 import akka.testkit.{TestActorRef, TestKit}
 import com.typesafe.config.ConfigFactory
 import org.h3nk3.braces.backend.DroneManager.SurveillanceArea
-import org.h3nk3.braces.domain.Domain.Position
+import org.h3nk3.braces.domain.Position
 import org.scalatest.{Matchers, WordSpecLike}
 
 class DroneManagerSpec extends TestKit(ActorSystem("TestActorSystem", ConfigFactory.parseString(""))) with WordSpecLike with Matchers {

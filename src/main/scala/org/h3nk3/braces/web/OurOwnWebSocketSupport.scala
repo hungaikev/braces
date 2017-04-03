@@ -5,7 +5,6 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.http.scaladsl.model.ws.TextMessage.{Streamed, Strict}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Flow, Sink}
-import org.h3nk3.braces.domain.Domain.DroneData
 
 import scala.concurrent.Future
 import scala.util.Random

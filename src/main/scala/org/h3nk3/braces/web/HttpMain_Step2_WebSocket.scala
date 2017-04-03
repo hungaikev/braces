@@ -11,15 +11,14 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
 import org.h3nk3.braces.backend.DroneConnectionHub
-import org.h3nk3.braces.domain.Domain
+import org.h3nk3.braces.domain._
+import org.h3nk3.braces.domain.JsonDomain._
 
 import scala.concurrent.duration._
 
 object HttpMain_Step2_WebSocket extends App 
   with Directives with OurOwnWebSocketSupport {
-  
-  import org.h3nk3.braces.domain.JsonDomain._
-  
+
   implicit val system = ActorSystem("BracesBackend")
   implicit val materializer = ActorMaterializer()
   implicit val dispatcher = system.dispatcher
@@ -44,7 +43,7 @@ object HttpMain_Step2_WebSocket extends App
   
   def DroneId = Segment
   
-  def conversion: Flow[Message, Domain.DroneData, Any] =
+  def conversion: Flow[Message, DroneData, Any] =
     Flow[Message].flatMapConcat(_.asBinaryMessage.getStreamedData)
-      .mapAsync(1)(bs => Unmarshal(bs).to[Domain.DroneData])
+      .mapAsync(1)(bs => Unmarshal(bs).to[DroneData])
 }
